@@ -110,7 +110,7 @@ function HeroBanner() {
 
 
 
-          <h1 className="max-w-3xl text-[32px] font-extrabold leading-[1.15] md:text-[42px]">
+          <h1 className="max-w-3xl text-[28px] font-extrabold leading-[1.15] md:text-[42px]">
             <span className="text-[#124e78]">Da el siguiente paso</span>
             <br />
             <span className="text-[#2b8aa8]">en el crecimiento de tu empresa</span>
