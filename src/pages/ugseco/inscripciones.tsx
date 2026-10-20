@@ -1719,7 +1719,7 @@ function HeroBanner({
             </div>
           </div>
         ) : (
-          <h1 className="max-w-3xl text-[32px] font-extrabold leading-[1.15] md:text-[30px]">
+          <h1 className="max-w-3xl text-[24px] font-extrabold leading-[1.15] md:text-[30px]">
             <span className="text-[#2b8aa8]">
               {course?.tema ?? "En el crecimiento de tu empresa"}
             </span>
@@ -1752,13 +1752,15 @@ function HeroBanner({
             <span className="text-[#3e647d]">{formatModalidad(course?.modalidad)}</span>
           </p>
           {!esVirtual && course?.direccion && (
-            <p className="flex items-center gap-2">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <p className="flex items-start gap-2">
+              <svg className="mt-0.5 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              <span className="font-semibold text-[#124e78]">Dirección: </span>
-              <span className="text-[#3e647d]">{course.direccion}</span>
+              <span className="min-w-0 break-words text-[#3e647d]">
+                <span className="font-semibold text-[#124e78]">Dirección: </span>
+                {course.direccion}
+              </span>
             </p>
           )}
           <p className="flex items-center gap-2">
@@ -1804,6 +1806,13 @@ function PageLoading() {
 
 export default function Inscripciones() {
   useFavicon(ugsecoIcon);
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "capacitaciones | UGSECO";
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
   const [searchParams] = useSearchParams();
   const slug = searchParams.get("slug");
   const [loadedCourse, setLoadedCourse] = useState<{

@@ -152,7 +152,7 @@ function CourseRow({ item }: { item: Course }) {
       {/* Detalle */}
       <div className="flex flex-1 flex-col sm:flex-row">
         <div className="flex-1 px-5 py-4 md:px-6">
-          <h3 className="text-[20px] font-bold leading-tight text-[#124e78]">{item.title}</h3>
+          <h3 className="text-[16px] md:text-[20px] font-bold leading-tight text-[#124e78]">{item.title}</h3>
           <div className="mt-1 text-[13.5px] leading-relaxed text-[#3e647d]">
             <p>Expositor: {item.expositor}</p>
             <p>Modalidad: {item.modo}</p>
@@ -209,6 +209,13 @@ function CourseRowSkeleton() {
 
 export default function CoursesTemplate() {
   useFavicon(ugsecoIcon);
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "capacitaciones | UGSECO";
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
