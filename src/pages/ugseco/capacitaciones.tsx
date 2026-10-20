@@ -108,17 +108,12 @@ function HeroBanner() {
         <div className="relative px-8 py-10 md:px-14 md:py-12">
           {/* iconos decorativos */}
 
-
-
           <h1 className="max-w-3xl text-[28px] font-extrabold leading-[1.15] md:text-[42px]">
-            <span className="text-[#124e78]">Da el siguiente paso</span>
-            <br />
-            <span className="text-[#2b8aa8]">en el crecimiento de tu empresa</span>
+            <span className="text-[#124e78]">Da el siguiente paso en el crecimiento de </span>
+            <span className="text-[#2b8aa8]">tu cooperativa</span>
           </h1>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-[#2f5670] md:text-[17px]">
-            Accede a capacitaciones gratuitas para fortalecer tu MYPE y mejorar su
-            competitividad. Elige los cursos que mejor se adapten a tus necesidades e impulsa el
-            crecimiento de tu empresa.
+            Accede a capacitaciones gratuitas si formas parte de una cooperativa. Elige los cursos que mejor se adapten a tus necesidades e impulsa tu desarrollo y el de tu organización.
           </p>
         </div>
 
