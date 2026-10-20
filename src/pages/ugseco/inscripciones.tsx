@@ -103,6 +103,7 @@ function RucField({
   onChange,
   required = false,
   showErrors = false,
+  loading = false,
 }: {
   id: string;
   label: string;
@@ -111,6 +112,7 @@ function RucField({
   onChange: (value: string) => void;
   required?: boolean;
   showErrors?: boolean;
+  loading?: boolean;
 }) {
   const [touched, setTouched] = useState(false);
 
@@ -144,6 +146,12 @@ function RucField({
       {error && (
         <p id={errorId} className="text-xs text-input-error">
           {error}
+        </p>
+      )}
+      {loading && (
+        <p className="flex items-center gap-1.5 text-xs text-[#2b8aa8]">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-[#2b8aa8]/30 border-t-[#2b8aa8]" />
+          Buscando información del RUC...
         </p>
       )}
     </div>
@@ -501,14 +509,52 @@ function StepCooperativa({
   );
 }
 
+type EmpresaLookupResponse = {
+  status: number;
+  source?: string;
+  data?: {
+    ruc?: string | null;
+    razon_social?: string | null;
+    nombre_comercial?: string | null;
+    sector_economico_id?: number | null;
+    rubro_id?: number | null;
+    actividad_comercial_nombre?: string | null;
+    region_id?: number | null;
+    provincia_id?: number | null;
+    distrito_id?: number | null;
+    direccion?: string | null;
+  };
+};
+
+type EmpresarioLookupResponse = {
+  status: number;
+  data?: {
+    numero_dni?: string | null;
+    apellido_paterno?: string | null;
+    apellido_materno?: string | null;
+    nombres?: string | null;
+    genero_id?: number | null;
+    discapacidad?: number | null;
+    celular?: string | null;
+    correo_electronico?: string | null;
+    pais_id?: number | null;
+  };
+};
+
+function toOptionValue(value: number | null | undefined) {
+  return value != null ? String(value) : "";
+}
+
 function StepEmpresa({
   values,
   onChange,
   showErrors,
+  onComplete,
 }: {
   values: EmpresaForm;
   onChange: (values: EmpresaForm) => void;
   showErrors: boolean;
+  onComplete?: () => void;
 }) {
   const {
     ruc,
@@ -524,6 +570,76 @@ function StepEmpresa({
   } = values;
   const update = (patch: Partial<EmpresaForm>) =>
     onChange({ ...values, ...patch });
+
+  const [loadingRuc, setLoadingRuc] = useState(false);
+  const valuesRef = useRef(values);
+  const lastLookupRuc = useRef<string | null>(null);
+  const lookupId = useRef(0);
+
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
+
+  const lookupEmpresa = async (rucValue: string) => {
+    const requestId = ++lookupId.current;
+    setLoadingRuc(true);
+
+    try {
+      const response = await httpRequest<EmpresaLookupResponse>({
+        method: "GET",
+        url: `event-pnte-public/empresa/${rucValue}`,
+      });
+
+      if (requestId !== lookupId.current) return;
+      if (lastLookupRuc.current !== rucValue) return;
+      if (response.status !== 200 || !response.data) return;
+
+      const latest = valuesRef.current;
+      if (latest.ruc !== rucValue) return;
+
+      const data = response.data;
+      const nextValues: EmpresaForm = {
+        ...latest,
+        ruc: rucValue,
+        razonSocial: data.razon_social ?? "",
+        nombreComercial: data.nombre_comercial ?? "",
+        sector: toOptionValue(data.sector_economico_id),
+        rubro: toOptionValue(data.rubro_id),
+        actividad: data.actividad_comercial_nombre ?? "",
+        region: toOptionValue(data.region_id),
+        province: toOptionValue(data.provincia_id),
+        district: toOptionValue(data.distrito_id),
+        direccion: data.direccion ?? "",
+      };
+
+      onChange(nextValues);
+
+      if (onComplete && isEmpresaFormValid(nextValues)) {
+        onComplete();
+      }
+    } catch {
+      // Si el RUC no tiene registros previos, se mantienen los datos del formulario.
+    } finally {
+      if (requestId === lookupId.current) {
+        setLoadingRuc(false);
+      }
+    }
+  };
+
+  const handleRucChange = (value: string) => {
+    update({ ruc: value });
+
+    if (value.length === 11 && isValidRucPrefix(value)) {
+      if (lastLookupRuc.current !== value) {
+        lastLookupRuc.current = value;
+        void lookupEmpresa(value);
+      }
+    } else {
+      lastLookupRuc.current = null;
+      lookupId.current += 1;
+      setLoadingRuc(false);
+    }
+  };
 
   const nombreComercialError =
     showErrors && nombreComercial.trim() === ""
@@ -561,7 +677,8 @@ function StepEmpresa({
           label="Número de RUC"
           placeholder="Ingrese el número de RUC"
           value={ruc}
-          onChange={(value) => update({ ruc: value })}
+          onChange={handleRucChange}
+          loading={loadingRuc}
         />
         <div className="grid gap-2">
           <Label htmlFor="razon-empresa">Razón Social</Label>
@@ -774,6 +891,9 @@ function StepParticipante({
   const [celular, setCelular] = useState("");
   const [correo, setCorreo] = useState("");
   const [country, setCountry] = useState("");
+  const [loadingDocument, setLoadingDocument] = useState(false);
+  const lastLookupDocument = useRef<string | null>(null);
+  const lookupDocumentId = useRef(0);
   const { options: documentTypes } = useSelectOptions(getDocumentTypes);
   const { options: countries } = useSelectOptions(getCountries);
 
@@ -790,6 +910,59 @@ function StepParticipante({
   const documentRule = getDocumentRule(documentTypes, documentType);
   const documentNumberMaxLength = documentRule?.length;
 
+  const lookupDocument = async (value: string) => {
+    const requestId = ++lookupDocumentId.current;
+    setLoadingDocument(true);
+
+    try {
+      const response = await httpRequest<EmpresarioLookupResponse>({
+        method: "GET",
+        url: `event-pnte-public/empresario/${value}`,
+      });
+
+      if (requestId !== lookupDocumentId.current) return;
+      if (lastLookupDocument.current !== value) return;
+      if (response.status !== 200 || !response.data) return;
+
+      const data = response.data;
+
+      setApellidoPaterno((data.apellido_paterno ?? "").trim());
+      setApellidoMaterno((data.apellido_materno ?? "").trim());
+      setNombres((data.nombres ?? "").trim());
+      setGenero(toOptionValue(data.genero_id));
+      setDiscapacidad(
+        data.discapacidad != null ? String(data.discapacidad) : ""
+      );
+      setCelular((data.celular ?? "").replace(/\D/g, "").slice(0, 9));
+      setCorreo((data.correo_electronico ?? "").trim());
+
+      if (!isDni && data.pais_id != null) {
+        setCountry(String(data.pais_id));
+      }
+    } catch {
+      // Si el documento no tiene registros previos, se mantienen los datos.
+    } finally {
+      if (requestId === lookupDocumentId.current) {
+        setLoadingDocument(false);
+      }
+    }
+  };
+
+  const handleDocumentNumberChange = (value: string) => {
+    setDocumentNumber(value);
+
+    if (documentRule && value.length === documentRule.length) {
+      if (lastLookupDocument.current !== value) {
+        lastLookupDocument.current = value;
+        void lookupDocument(value);
+      }
+    } else {
+      lastLookupDocument.current = null;
+      lookupDocumentId.current += 1;
+      setLoadingDocument(false);
+    }
+  };
+
   const documentTypeError =
     showErrors && documentType === ""
       ? "El tipo de documento es obligatorio."
@@ -798,8 +971,8 @@ function StepParticipante({
     showErrors && documentNumber === ""
       ? "El número de documento es obligatorio."
       : documentRule &&
-          (documentNumberTouched || showErrors) &&
-          documentNumber.length !== documentRule.length
+        (documentNumberTouched || showErrors) &&
+        documentNumber.length !== documentRule.length
         ? `El ${documentRule.name} debe tener exactamente ${documentRule.length} dígitos numéricos.`
         : null;
   const apellidoPaternoError =
@@ -875,6 +1048,9 @@ function StepParticipante({
           onChange={(next) => {
             setDocumentType(next);
             setDocumentNumberTouched(false);
+            lastLookupDocument.current = null;
+            lookupDocumentId.current += 1;
+            setLoadingDocument(false);
             const nextRule = getDocumentRule(documentTypes, next);
             if (nextRule) {
               setDocumentNumber((prev) => prev.slice(0, nextRule.length));
@@ -902,7 +1078,7 @@ function StepParticipante({
             maxLength={documentNumberMaxLength}
             value={documentNumber}
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setDocumentNumber(
+              handleDocumentNumberChange(
                 event.target.value
                   .replace(/\D/g, "")
                   .slice(0, documentNumberMaxLength)
@@ -918,6 +1094,12 @@ function StepParticipante({
           {documentNumberError && (
             <p id="num-doc-error" className="text-xs text-input-error">
               {documentNumberError}
+            </p>
+          )}
+          {loadingDocument && (
+            <p className="flex items-center gap-1.5 text-xs text-[#2b8aa8]">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-[#2b8aa8]/30 border-t-[#2b8aa8]" />
+              Buscando información del documento...
             </p>
           )}
         </div>
@@ -1151,6 +1333,23 @@ function RegistrationStepper({
         url: "event-pnte-public/registro-cooperativas",
         data: payload,
       });
+
+      await httpRequest({
+        method: "GET",
+        url: "event-pnte-public/email-participacion-cooperativas-ugseco",
+        params: {
+          slug,
+          correo: participanteValues.correo,
+          nombres: [
+            participanteValues.nombres,
+            participanteValues.apellidoPaterno,
+            participanteValues.apellidoMaterno,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        },
+      }).catch(() => undefined);
+
       setSuccessOpen(true);
     } catch {
       setSubmitError("No se pudo completar el registro. Intente nuevamente.");
@@ -1175,6 +1374,7 @@ function RegistrationStepper({
           values={empresa}
           onChange={setEmpresa}
           showErrors={showEmpresaErrors}
+          onComplete={() => setCurrent(2)}
         />
       )}
       {current === 2 && (
@@ -1299,6 +1499,16 @@ function RegistrationStepper({
                 Agendar en Google Calendar
               </a>
 
+              <p className="mt-5 w-full border-t border-[#f1f5f9] pt-4 text-[12px] text-[#64748b]">
+                Cualquier consulta escribir a{" "}
+                <a
+                  href="mailto:servicios.coop@produce.gob.pe"
+                  className="font-medium text-[#2b8aa8] hover:underline"
+                >
+                  servicios.coop@produce.gob.pe
+                </a>
+              </p>
+
               <button
                 type="button"
                 onClick={handleCloseSuccess}
@@ -1360,7 +1570,6 @@ function formatModalidad(modalidad: string | null | undefined) {
   const value = modalidad?.trim().toUpperCase();
 
   if (!value) return "Por confirmar";
-  if (value === "VIRTUAL") return "Vía Meet";
 
   return value.charAt(0) + value.slice(1).toLowerCase();
 }
@@ -1489,6 +1698,7 @@ function HeroBanner({
   loading: boolean;
 }) {
   const fecha = course?.fechas?.[0] ?? null;
+  const esVirtual = (course?.modalidad ?? "").trim().toUpperCase() === "VIRTUAL";
 
   return (
     <div className="grid bg-[#f7fdff] md:grid-cols-[1fr_380px]">
@@ -1509,7 +1719,7 @@ function HeroBanner({
             </div>
           </div>
         ) : (
-          <h1 className="max-w-3xl text-[32px] font-extrabold leading-[1.15] md:text-[42px]">
+          <h1 className="max-w-3xl text-[32px] font-extrabold leading-[1.15] md:text-[30px]">
             <span className="text-[#2b8aa8]">
               {course?.tema ?? "En el crecimiento de tu empresa"}
             </span>
@@ -1541,6 +1751,16 @@ function HeroBanner({
             <span className="font-semibold text-[#124e78]">Modalidad: </span>
             <span className="text-[#3e647d]">{formatModalidad(course?.modalidad)}</span>
           </p>
+          {!esVirtual && course?.direccion && (
+            <p className="flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span className="font-semibold text-[#124e78]">Dirección: </span>
+              <span className="text-[#3e647d]">{course.direccion}</span>
+            </p>
+          )}
           <p className="flex items-center gap-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />

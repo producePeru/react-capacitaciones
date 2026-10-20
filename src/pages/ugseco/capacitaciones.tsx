@@ -11,6 +11,7 @@ type ApiCourse = {
   tema: string | null;
   horario: unknown;
   modalidad: string | null;
+  direccion: string | null;
   asesor: string | null;
 };
 
@@ -27,6 +28,7 @@ type Course = {
   title: string;
   expositor: string;
   modo: string;
+  direccion: string | null;
   horario: string;
 };
 
@@ -74,6 +76,14 @@ function formatHorario(horario: unknown) {
   return "Por confirmar";
 }
 
+function formatModalidad(modalidad: string | null) {
+  const value = modalidad?.trim().toUpperCase();
+
+  if (!value) return "Por confirmar";
+
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
+
 function mapCourse(item: ApiCourse): Course {
   const { day, month, year } = formatDate(item.fechas);
 
@@ -84,7 +94,8 @@ function mapCourse(item: ApiCourse): Course {
     year,
     title: item.tema ?? "Capacitación",
     expositor: item.asesor ?? "Por confirmar",
-    modo: item.modalidad ?? "Por confirmar",
+    modo: formatModalidad(item.modalidad),
+    direccion: item.direccion ?? null,
     horario: formatHorario(item.horario),
   };
 }
@@ -112,7 +123,7 @@ function HeroBanner() {
         </div>
 
         {/* Imagen */}
-        <div className="relative m-0 flex h-auto items-center justify-center overflow-hidden bg-white p-0">
+        <div className="relative m-0 hidden h-auto items-center justify-center overflow-hidden bg-white p-0 md:flex">
           <img
             src="https://www.fundacione.org/img/Imagenes/Empresarios.webp"
             alt="Empresarios"
@@ -127,6 +138,8 @@ function HeroBanner() {
 }
 
 function CourseRow({ item }: { item: Course }) {
+  const esVirtual = item.modo.trim().toLowerCase() === "virtual";
+
   return (
     <div className="flex min-h-[110px] overflow-hidden rounded-lg border border-[#cfe0ec] bg-[#e9f1f7]">
       {/* Fecha */}
@@ -142,7 +155,10 @@ function CourseRow({ item }: { item: Course }) {
           <h3 className="text-[20px] font-bold leading-tight text-[#124e78]">{item.title}</h3>
           <div className="mt-1 text-[13.5px] leading-relaxed text-[#3e647d]">
             <p>Expositor: {item.expositor}</p>
-            <p>Modo: {item.modo}</p>
+            <p>Modalidad: {item.modo}</p>
+            {!esVirtual && item.direccion && (
+              <p>Dirección: {item.direccion}</p>
+            )}
             <p>Horario: {item.horario}</p>
           </div>
         </div>
@@ -227,7 +243,7 @@ export default function CoursesTemplate() {
 
   return (
     <div className="min-h-screen w-full bg-white py-6">
-      <div className="mx-auto w-full max-w-[1280px] px-8">
+      <div className="mx-auto w-full max-w-[1280px] px-6">
         <HeroBanner />
 
         <div className="mt-6 mb-3 flex items-center justify-between">
