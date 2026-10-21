@@ -13,6 +13,7 @@ type ApiCourse = {
   modalidad: string | null;
   direccion: string | null;
   asesor: string | null;
+  activo: number | boolean | null;
 };
 
 type ApiResponse = {
@@ -224,7 +225,11 @@ export default function CoursesTemplate() {
     })
       .then((response) => {
         if (active) {
-          setCourses((response.data ?? []).map(mapCourse));
+          setCourses(
+            (response.data ?? [])
+              .filter((item) => Number(item.activo) === 1)
+              .map(mapCourse),
+          );
         }
       })
       .catch(() => {

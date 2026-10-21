@@ -58,7 +58,7 @@ export function NativeSelect({
         )}
         {children}
       </select>
-      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#5a7585]">
+      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#5a7585]">
         <svg
           width="12"
           height="12"
