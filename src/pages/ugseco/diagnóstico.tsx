@@ -17,19 +17,45 @@ import {
 } from "@/services/selects";
 
 const brandFieldCls =
-  "h-[45px] border-[#a7a7a7] pt-2 pb-3 focus:border-[#2b8aa8] focus:ring-[#2b8aa8]/25";
+  "h-[45px] w-full border-[#a7a7a7] py-0 text-sm focus:border-[#2b8aa8] focus:ring-[#2b8aa8]/25";
 
 function BrandInput(props: InputProps) {
   const { className, ...rest } = props;
-  return <Input {...rest} className={`${brandFieldCls} ${className ?? ""}`} />;
+  return (
+    <Input
+      {...rest}
+      className={`${brandFieldCls} px-4 ${className ?? ""}`}
+    />
+  );
 }
 
 function BrandSelect(props: NativeSelectProps) {
   const { children, className, ...rest } = props;
   return (
-    <NativeSelect {...rest} className={`${brandFieldCls} ${className ?? ""}`}>
+    <NativeSelect
+      {...rest}
+      className={`${brandFieldCls} pl-4 pr-10 ${className ?? ""}`}
+    >
       {children}
     </NativeSelect>
+  );
+}
+
+function FieldMessage({
+  error,
+  hint,
+}: {
+  error?: string;
+  hint?: string;
+}) {
+  return (
+    <div className="min-h-[18px] text-xs leading-[18px]">
+      {error ? (
+        <p className="text-input-error">{error}</p>
+      ) : hint ? (
+        <p className="text-[#6b7f8c]">{hint}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -380,8 +406,8 @@ export default function DiagnosticoPage() {
               Ingresa tus datos para asociar el diagnóstico a tu negocio.
             </p>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="grid gap-2">
+            <div className="mt-6 grid grid-cols-1 items-start gap-x-6 gap-y-5 md:grid-cols-3">
+              <div className="flex min-w-0 flex-col gap-2">
                 <Label htmlFor="tipo-documento">Tipo de documento</Label>
                 <BrandSelect
                   id="tipo-documento"
@@ -403,14 +429,10 @@ export default function DiagnosticoPage() {
                     </NativeSelectOption>
                   ))}
                 </BrandSelect>
-                {fieldErrors.tipoDocumento && (
-                  <p className="text-xs text-input-error">
-                    {fieldErrors.tipoDocumento}
-                  </p>
-                )}
+                <FieldMessage error={fieldErrors.tipoDocumento} />
               </div>
 
-              <div className="grid gap-2">
+              <div className="flex min-w-0 flex-col gap-2">
                 <Label htmlFor="numero-documento">
                   Número de documento
                 </Label>
@@ -436,14 +458,10 @@ export default function DiagnosticoPage() {
                     fieldErrors.numeroDocumento ? true : undefined
                   }
                 />
-                {fieldErrors.numeroDocumento && (
-                  <p className="text-xs text-input-error">
-                    {fieldErrors.numeroDocumento}
-                  </p>
-                )}
+                <FieldMessage error={fieldErrors.numeroDocumento} />
               </div>
 
-              <div className="grid gap-2">
+              <div className="flex min-w-0 flex-col gap-2">
                 <Label htmlFor="ruc">RUC (opcional)</Label>
                 <BrandInput
                   id="ruc"
@@ -461,13 +479,10 @@ export default function DiagnosticoPage() {
                   state={fieldErrors.ruc ? "error" : "default"}
                   aria-invalid={fieldErrors.ruc ? true : undefined}
                 />
-                {fieldErrors.ruc ? (
-                  <p className="text-xs text-input-error">{fieldErrors.ruc}</p>
-                ) : (
-                  <p className="text-xs text-[#6b7f8c]">
-                    Si aún no cuentas con RUC, puedes dejarlo en blanco.
-                  </p>
-                )}
+                <FieldMessage
+                  error={fieldErrors.ruc}
+                  hint="Si aún no cuentas con RUC, puedes dejarlo en blanco."
+                />
               </div>
             </div>
 

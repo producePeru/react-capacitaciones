@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
 import { useFavicon } from "@/hooks/useFavicon";
 import { httpRequest } from "@/services/api";
+import empresarios from "@/assets/images/cooperativa-team.png";
 
 type ApiCourse = {
   id: number;
@@ -21,11 +22,40 @@ type ApiResponse = {
   data: ApiCourse[];
 };
 
-type Course = {
-  slug: string;
+let cursosRequest: Promise<ApiCourse[]> | null = null;
+
+function loadCursosCooperativasUgseco() {
+  if (cursosRequest) return cursosRequest;
+
+  const request = httpRequest<ApiResponse>({
+    method: "GET",
+    url: "event-pnte-public/cursos-cooperativas-ugseco",
+  }).then((response) => response.data ?? []);
+
+  cursosRequest = request;
+
+  request.then(
+    () => {
+      if (cursosRequest === request) cursosRequest = null;
+    },
+    () => {
+      if (cursosRequest === request) cursosRequest = null;
+    }
+  );
+
+  return request;
+}
+
+type CourseDate = {
+  iso: string;
   day: string;
   month: string;
   year: string;
+};
+
+type Course = {
+  slug: string;
+  fechas: CourseDate[];
   title: string;
   expositor: string;
   modo: string;
@@ -48,26 +78,60 @@ const MONTHS = [
   "DIC.",
 ];
 
-function formatDate(fechas: string[] | null) {
-  const dates = (fechas ?? []).filter(Boolean).sort();
+function parseFechas(fechas: string[] | null): CourseDate[] {
+  return (fechas ?? [])
+    .filter((fecha) => typeof fecha === "string" && /^\d{4}-\d{2}-\d{2}/.test(fecha))
+    .sort()
+    .map((fecha) => {
+      const iso = fecha.slice(0, 10);
+      const [year, month, day] = iso.split("-");
+      const monthIndex = Number(month) - 1;
 
-  if (dates.length === 0) {
-    return { day: "--", month: "---", year: "----" };
-  }
+      return {
+        iso,
+        day: day ?? "--",
+        month: MONTHS[monthIndex] ?? "---",
+        year: year ?? "----",
+      };
+    });
+}
 
-  const [year, month, day] = dates[0].split("-");
-  const monthIndex = Number(month) - 1;
+function formatFechaNumerica(fecha: CourseDate) {
+  const [, month, day] = fecha.iso.split("-");
+  return `${day}/${month}/${fecha.year}`;
+}
 
-  return {
-    day: day ?? "--",
-    month: MONTHS[monthIndex] ?? "---",
-    year: year ?? "----",
-  };
+function formatFechas(fechas: CourseDate[]) {
+  if (fechas.length === 0) return "Por confirmar";
+
+  const labels = fechas.map(formatFechaNumerica);
+
+  if (labels.length === 1) return labels[0];
+
+  return `${labels.slice(0, -1).join(", ")} y ${labels[labels.length - 1]}`;
 }
 
 function formatHorario(horario: unknown) {
   if (Array.isArray(horario)) {
-    return horario.filter(Boolean).join(" - ") || "Por confirmar";
+    const rangos = horario.flatMap((item) => {
+      if (typeof item === "string" && item.trim() !== "") {
+        return [item.trim()];
+      }
+
+      if (item && typeof item === "object") {
+        const sesion = item as { horaInicio?: unknown; horaFin?: unknown };
+        const inicio =
+          typeof sesion.horaInicio === "string" ? sesion.horaInicio.trim() : "";
+        const fin = typeof sesion.horaFin === "string" ? sesion.horaFin.trim() : "";
+
+        if (inicio && fin) return [`${inicio} - ${fin}`];
+        if (inicio) return [inicio];
+      }
+
+      return [];
+    });
+
+    return [...new Set(rangos)].join(" / ") || "Por confirmar";
   }
 
   if (typeof horario === "string" && horario.trim() !== "") {
@@ -86,13 +150,9 @@ function formatModalidad(modalidad: string | null) {
 }
 
 function mapCourse(item: ApiCourse): Course {
-  const { day, month, year } = formatDate(item.fechas);
-
   return {
     slug: item.slug,
-    day,
-    month,
-    year,
+    fechas: parseFechas(item.fechas),
     title: item.tema ?? "Capacitación",
     expositor: item.asesor ?? "Por confirmar",
     modo: formatModalidad(item.modalidad),
@@ -121,9 +181,9 @@ function HeroBanner() {
         {/* Imagen */}
         <div className="relative m-0 hidden h-auto items-center justify-center overflow-hidden bg-white p-0 md:flex">
           <img
-            src="https://www.fundacione.org/img/Imagenes/Empresarios.webp"
+            src={empresarios}
             alt="Empresarios"
-            className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[280px]"
+            className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[250px]"
           />
         </div>
       </div>
@@ -135,14 +195,27 @@ function HeroBanner() {
 
 function CourseRow({ item }: { item: Course }) {
   const esVirtual = item.modo.trim().toLowerCase() === "virtual";
+  const primeraFecha = item.fechas[0];
+  const fechasAdicionales = Math.max(item.fechas.length - 1, 0);
 
   return (
     <div className="flex min-h-[110px] overflow-hidden rounded-lg border border-[#cfe0ec] bg-[#e9f1f7]">
       {/* Fecha */}
       <div className="flex w-[104px] shrink-0 flex-col items-center justify-center bg-[#14567d] py-5 leading-none text-white md:w-[132px]">
-        <span className="text-[36px] font-bold tracking-tight">{item.day}</span>
-        <span className="mt-1 text-[12px] font-medium text-white">{item.month}</span>
-        <span className="text-[12px] font-medium text-[#c9e2f0]">{item.year}</span>
+        <span className="text-[36px] font-bold tracking-tight">
+          {primeraFecha?.day ?? "--"}
+        </span>
+        <span className="mt-1 text-[12px] font-medium text-white">
+          {primeraFecha?.month ?? "---"}
+        </span>
+        <span className="text-[12px] font-medium text-[#c9e2f0]">
+          {primeraFecha?.year ?? "----"}
+        </span>
+        {fechasAdicionales > 0 && (
+          <span className="mt-2 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white">
+            +{fechasAdicionales} {fechasAdicionales === 1 ? "fecha" : "fechas"}
+          </span>
+        )}
       </div>
 
       {/* Detalle */}
@@ -152,6 +225,7 @@ function CourseRow({ item }: { item: Course }) {
           <div className="mt-1 text-[13.5px] leading-relaxed text-[#3e647d]">
             <p>Expositor: {item.expositor}</p>
             <p>Modalidad: {item.modo}</p>
+            <p>Fechas: {formatFechas(item.fechas)}</p>
             {!esVirtual && item.direccion && (
               <p>Dirección: {item.direccion}</p>
             )}
@@ -219,14 +293,11 @@ export default function CoursesTemplate() {
   useEffect(() => {
     let active = true;
 
-    httpRequest<ApiResponse>({
-      method: "GET",
-      url: "event-pnte-public/cursos-cooperativas-ugseco",
-    })
-      .then((response) => {
+    loadCursosCooperativasUgseco()
+      .then((data) => {
         if (active) {
           setCourses(
-            (response.data ?? [])
+            data
               .filter((item) => Number(item.activo) === 1)
               .map(mapCourse),
           );

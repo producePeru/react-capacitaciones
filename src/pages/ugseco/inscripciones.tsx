@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
+import cooperativaMype from "@/assets/images/cooperativa-mype.png";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -1778,9 +1779,9 @@ function HeroBanner({
       {/* Imagen */}
       <div className="relative m-0 hidden h-auto items-center justify-center overflow-hidden bg-[#f7fdff] p-0 md:flex">
         <img
-          src="https://www.fundacione.org/img/Imagenes/Empresarios.webp"
-          alt="Empresarios"
-          className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[280px]"
+          src={cooperativaMype}
+          alt="Cooperativa MYPE"
+          className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[360px]"
         />
       </div>
     </div>
