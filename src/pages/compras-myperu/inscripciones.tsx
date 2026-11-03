@@ -361,27 +361,6 @@ function OptionsSelectField({
   );
 }
 
-type CooperativaForm = {
-  ruc: string;
-  razonSocial: string;
-  rol: string;
-};
-
-// const emptyCooperativaForm: CooperativaForm = {
-//   ruc: "",
-//   razonSocial: "",
-//   rol: "",
-// };
-
-// function isCooperativaFormValid(values: CooperativaForm) {
-//   return (
-//     isValidRucPrefix(values.ruc) &&
-//     values.ruc.length === 11 &&
-//     values.razonSocial.trim().length > 0 &&
-//     values.rol !== ""
-//   );
-// }
-
 type EmpresaForm = {
   ruc: string;
   razonSocial: string;
