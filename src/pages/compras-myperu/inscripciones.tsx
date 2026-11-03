@@ -1,5 +1,3 @@
-
-
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import comprasMyperuIcon from "@/assets/icons/compras-myperu.ico";
@@ -28,12 +26,9 @@ import {
 
 const steps = ["Datos de la Empresa", "Datos del Participante"];
 
-const WHATSAPP_COMMUNITY_URL =
-  "https://chat.whatsapp.com/FcqgLQvvmP23HN1TYxQH5N";
+// const WHATSAPP_COMMUNITY_URL =
+//   "https://chat.whatsapp.com/FcqgLQvvmP23HN1TYxQH5N";
 
-// Color y medidas de marca de esta página: borde #a7a7a7, alto 50px
-// y focus #2b8aa8 sobre los estilos base de Tailgrids
-// (solo aquí, sin tocar el core).
 const brandFieldCls = "h-[45px] border-[#a7a7a7] focus:border-[#2b8aa8] focus:ring-[#2b8aa8]/25";
 
 function BrandInput(props: InputProps) {
@@ -372,20 +367,20 @@ type CooperativaForm = {
   rol: string;
 };
 
-const emptyCooperativaForm: CooperativaForm = {
-  ruc: "",
-  razonSocial: "",
-  rol: "",
-};
+// const emptyCooperativaForm: CooperativaForm = {
+//   ruc: "",
+//   razonSocial: "",
+//   rol: "",
+// };
 
-function isCooperativaFormValid(values: CooperativaForm) {
-  return (
-    isValidRucPrefix(values.ruc) &&
-    values.ruc.length === 11 &&
-    values.razonSocial.trim().length > 0 &&
-    values.rol !== ""
-  );
-}
+// function isCooperativaFormValid(values: CooperativaForm) {
+//   return (
+//     isValidRucPrefix(values.ruc) &&
+//     values.ruc.length === 11 &&
+//     values.razonSocial.trim().length > 0 &&
+//     values.rol !== ""
+//   );
+// }
 
 type EmpresaForm = {
   ruc: string;
@@ -423,90 +418,6 @@ function isEmpresaFormValid(values: EmpresaForm) {
     values.province !== "" &&
     values.district !== "" &&
     values.direccion.trim().length > 0
-  );
-}
-
-function StepCooperativa({
-  values,
-  onChange,
-  showErrors,
-}: {
-  values: CooperativaForm;
-  onChange: (values: CooperativaForm) => void;
-  showErrors: boolean;
-}) {
-  const { ruc, razonSocial, rol } = values;
-  const update = (patch: Partial<CooperativaForm>) =>
-    onChange({ ...values, ...patch });
-
-  const razonSocialError =
-    showErrors && razonSocial.trim().length === 0
-      ? "La razón social es obligatoria."
-      : null;
-  const rolError = showErrors && rol === "" ? "El rol es obligatorio." : null;
-
-  return (
-    <div>
-      <h3 className="mb-4 text-[15px] font-bold text-[#2b8aa8]">Datos de la Cooperativa</h3>
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
-        <RucField
-          id="ruc-cooperativa"
-          label="Número de RUC Cooperativa"
-          placeholder="Ingrese el número de RUC"
-          value={ruc}
-          onChange={(value) => update({ ruc: value })}
-          required
-          showErrors={showErrors}
-        />
-        <div className="grid gap-2">
-          <Label htmlFor="razon-cooperativa">Razón Social Cooperativa</Label>
-          <BrandInput
-            id="razon-cooperativa"
-            placeholder="Ingrese la razón social"
-            value={razonSocial}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              update({ razonSocial: event.target.value })
-            }
-            state={razonSocialError ? "error" : "default"}
-            aria-invalid={razonSocialError ? true : undefined}
-            aria-describedby={
-              razonSocialError ? "razon-cooperativa-error" : undefined
-            }
-          />
-          {razonSocialError && (
-            <p
-              id="razon-cooperativa-error"
-              className="text-xs text-input-error"
-            >
-              {razonSocialError}
-            </p>
-          )}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="rol-cooperativa">¿Cuál es tu rol en la cooperativa?</Label>
-          <BrandSelect
-            id="rol-cooperativa"
-            value={rol}
-            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
-              update({ rol: event.target.value })
-            }
-            variant={rolError ? "error" : "default"}
-            placeholder="Seleccione su rol"
-            aria-invalid={rolError ? true : undefined}
-            aria-describedby={rolError ? "rol-cooperativa-error" : undefined}
-          >
-            <NativeSelectOption value="dir">DIRIGENTE</NativeSelectOption>
-            <NativeSelectOption value="soc">SOCIO</NativeSelectOption>
-            <NativeSelectOption value="mie">MIEMBRO</NativeSelectOption>
-          </BrandSelect>
-          {rolError && (
-            <p id="rol-cooperativa-error" className="text-xs text-input-error">
-              {rolError}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1516,11 +1427,6 @@ type CourseDetail = {
   asesor: string | null;
   link?: string | null;
   direccion?: string | null;
-};
-
-type CoursesResponse = {
-  status: number;
-  data: CourseDetail[];
 };
 
 function formatFechaLarga(fecha?: string | null) {
