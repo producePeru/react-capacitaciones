@@ -9,5 +9,15 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "./src")
     }
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 800
   }
 });

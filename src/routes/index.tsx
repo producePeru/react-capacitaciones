@@ -1,14 +1,15 @@
 import { Navigate, type RouteObject } from "react-router-dom";
+import { lazy } from "react";
 
-import Inicio from "@/pages/index/inicio";
-import Asistencia from "@/pages/ugseco/asistencia";
-import CoursesTemplate from "@/pages/ugseco/capacitaciones";
-import Diagnostico from "@/pages/ugseco/diagnóstico";
-import Inscripciones from "@/pages/ugseco/inscripciones";
-import InscripcionesSinCooperativa from "@/pages/ugseco/inscripciones-sin-cooperativa";
+const Inicio = lazy(() => import("@/pages/index/inicio"));
+const Asistencia = lazy(() => import("@/pages/ugseco/asistencia"));
+const CoursesTemplate = lazy(() => import("@/pages/ugseco/capacitaciones"));
+const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
+const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
+const InscripcionesSinCooperativa = lazy(() => import("@/pages/ugseco/inscripciones-sin-cooperativa"));
 
-import CapacitacionesComprasMYPEru from "@/pages/compras-myperu/capacitaciones";
-import InscripcionesComprasMYPEru from "@/pages/compras-myperu/inscripciones";
+const CapacitacionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/capacitaciones"));
+const InscripcionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/inscripciones"));
 
 export const routes: RouteObject[] = [
 
