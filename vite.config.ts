@@ -11,13 +11,6 @@ export default defineConfig({
     }
   },
   build: {
-    rolldownOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-        }
-      }
-    },
     chunkSizeWarningLimit: 800
   }
 });
