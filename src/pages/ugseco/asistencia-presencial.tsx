@@ -597,7 +597,10 @@ export default function AsistenciaPresencialUgseco() {
   const [infoRefreshKey, setInfoRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug) {
+      console.warn("asistencia-presencial: slug vacío, no se hace request a asistencia-info");
+      return;
+    }
 
     let active = true;
 
@@ -607,10 +610,14 @@ export default function AsistenciaPresencialUgseco() {
     })
       .then((response) => {
         if (!active) return;
-
+        console.log("asistencia-info OK", { slug, status: response?.status, hasData: !!response?.data });
+        if (!response?.data) {
+          console.error("asistencia-info sin data", { slug, response });
+        }
         setLoadedCourse({ slug, course: response.data ?? null });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("asistencia-info error", { slug, err });
         if (active) setLoadedCourse({ slug, course: null });
       });
 
