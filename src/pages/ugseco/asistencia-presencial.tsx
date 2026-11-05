@@ -489,12 +489,12 @@ function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
         ? "No se pudo cargar la información de la capacitación. Vuelva a seleccionarla desde el listado."
         : "No se indicó la capacitación. Vuelva a seleccionarla desde el listado."}
       <div className="mt-4">
-        <Link
+        {/* <Link
           to="/ugseco/capacitaciones"
           className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
         >
           Ver capacitaciones
-        </Link>
+        </Link> */}
       </div>
     </div>
   );
@@ -560,7 +560,7 @@ export default function AsistenciaPresencialUgseco() {
     // No se navega para poder inspeccionar el error en esta página
     // navigate(`/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`);
 
-    return () => {};
+    return () => { };
   }, [redirecting, slug]);
 
   const [form, setForm] = useState<AsistenciaForm>(emptyAsistenciaForm);
