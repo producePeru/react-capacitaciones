@@ -632,12 +632,12 @@ export default function AsistenciaPresencialUgseco() {
   useEffect(() => {
     if (!redirecting || !slug) return;
 
-    const timer = window.setTimeout(() => {
-      navigate(`/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`);
-    }, 1800);
+    console.warn("asistencia-presencial: redirecting activado", { slug });
+    // No se navega para poder inspeccionar el error en esta página
+    // navigate(`/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`);
 
-    return () => window.clearTimeout(timer);
-  }, [redirecting, navigate, slug]);
+    return () => {};
+  }, [redirecting, slug]);
 
   const [form, setForm] = useState<AsistenciaForm>(emptyAsistenciaForm);
   const [showErrors, setShowErrors] = useState(false);
@@ -767,8 +767,6 @@ export default function AsistenciaPresencialUgseco() {
               <div className="flex min-h-[200px] items-center justify-center text-[#3e647d]">Cargando información del evento…</div>
             ) : !course ? (
               <LoadErrorPanel hasSlug={Boolean(slug)} />
-            ) : course.estado && course.estado !== "disponible" ? (
-              <UnavailablePanel course={course} slug={slug} />
             ) : (
               <form
                 noValidate
