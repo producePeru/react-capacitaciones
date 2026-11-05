@@ -6,14 +6,8 @@ import cooperativaMype from "@/assets/images/cooperativa-mype.png";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
-import {
-  NativeSelect,
-  NativeSelectOption,
-  type NativeSelectProps,
-} from "@/components/tailgrids/core/native-select";
 import { useFavicon } from "@/hooks/useFavicon";
 import { httpRequest } from "@/services/api";
-import { getDocumentTypes, type SelectOption } from "@/services/selects";
 
 const brandFieldCls =
   "h-[45px] border-[#a7a7a7] focus:border-[#2b8aa8] focus:ring-[#2b8aa8]/25";
@@ -21,15 +15,6 @@ const brandFieldCls =
 function BrandInput(props: InputProps) {
   const { className, ...rest } = props;
   return <Input {...rest} className={`${brandFieldCls} ${className ?? ""}`} />;
-}
-
-function BrandSelect(props: NativeSelectProps) {
-  const { children, className, ...rest } = props;
-  return (
-    <NativeSelect {...rest} className={`${brandFieldCls} ${className ?? ""}`}>
-      {children}
-    </NativeSelect>
-  );
 }
 
 type EventState = "proximo" | "disponible" | "finalizado" | "sin_fechas";
@@ -88,39 +73,6 @@ type AsistenciaForm = {
 const emptyAsistenciaForm: AsistenciaForm = {
   documentNumber: "",
 };
-
-const DOCUMENT_RULES = [
-  { match: "DNI", length: 8, name: "DNI" },
-  { match: "CARNET DE EXTRANJER", length: 9, name: "Carnet de Extranjería" },
-  { match: "PASAPORTE", length: 12, name: "Pasaporte" },
-  {
-    match: "PERMISO TEMPORAL DE PERMANENCIA",
-    length: 9,
-    name: "PTP",
-  },
-] as const;
-
-function normalizeOptionLabel(label: string) {
-  return label.trim().toUpperCase();
-}
-
-function getDocumentRule(documentTypes: SelectOption[], value: string) {
-  return DOCUMENT_RULES.find((rule) =>
-    documentTypes.some(
-      (option) =>
-        String(option.value) === value &&
-        normalizeOptionLabel(option.label).startsWith(rule.match)
-    )
-  );
-}
-
-const RUC_PREFIXES = ["10", "15", "17", "20"];
-
-function isValidRucPrefix(value: string) {
-  if (value.length === 0) return true;
-  const prefix = value.slice(0, 2);
-  return RUC_PREFIXES.some((prefixValue) => prefixValue.startsWith(prefix));
-}
 
 function getApiError(error: unknown, fallback: string) {
   if (
@@ -235,59 +187,6 @@ function ScheduleList({
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-function RucField({
-  id,
-  label,
-  placeholder,
-  value,
-  onChange,
-  showErrors,
-}: {
-  id: string;
-  label: string;
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-  showErrors: boolean;
-}) {
-  const [touched, setTouched] = useState(false);
-
-  const prefixValid = isValidRucPrefix(value);
-  const complete = value.length === 11;
-  const error = !prefixValid
-    ? "El RUC debe iniciar con 10, 15, 17 o 20."
-    : (touched || showErrors) && !complete
-      ? "El RUC debe tener exactamente 11 dígitos numéricos."
-      : null;
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      <BrandInput
-        id={id}
-        placeholder={placeholder}
-        inputMode="numeric"
-        autoComplete="off"
-        maxLength={11}
-        value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          onChange(event.target.value.replace(/\D/g, "").slice(0, 11))
-        }
-        onBlur={() => setTouched(true)}
-        state={error ? "error" : "default"}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-      />
-      {error && (
-        <p id={errorId} className="text-xs text-input-error">
-          {error}
-        </p>
-      )}
     </div>
   );
 }
@@ -486,7 +385,7 @@ function WelcomePanel({
             <path d="M20 6L9 17l-5-5" />
           </svg>
           Asistencia registrada para el{" "}
-          {formatFechaLarga(enrollment.asistencia.fecha)}.
+          {formatFechaLarga(enrollment.asistencia?.fecha)}.
         </p>
 
         {onRegresar && (
@@ -555,7 +454,7 @@ function WelcomePanel({
             <path d="M20 6L9 17l-5-5" />
           </svg>
           Asistencia registrada para el{" "}
-          {formatFechaLarga(enrollment.asistencia.fecha)}.
+          {formatFechaLarga(enrollment.asistencia?.fecha)}.
         </p>
       )}
 
@@ -729,24 +628,6 @@ export default function AsistenciaPresencialUgseco() {
 
     return () => window.clearTimeout(timer);
   }, [redirecting, navigate, slug]);
-
-  const [documentTypes, setDocumentTypes] = useState<SelectOption[]>([]);
-
-  useEffect(() => {
-    let active = true;
-
-    getDocumentTypes()
-      .then((options) => {
-        if (active) setDocumentTypes(options);
-      })
-      .catch(() => {
-        if (active) setDocumentTypes([]);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const [form, setForm] = useState<AsistenciaForm>(emptyAsistenciaForm);
   const [showErrors, setShowErrors] = useState(false);
