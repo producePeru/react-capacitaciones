@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
@@ -482,81 +482,6 @@ function WelcomePanel({
   );
 }
 
-function UnavailablePanel({
-  course,
-  slug,
-}: {
-  course: CourseDetail;
-  slug: string | null;
-}) {
-  const fechas = course.fechas ?? [];
-  const primeraFecha = fechas[0] ?? null;
-  const proximaFecha = course.proxima_fecha ?? null;
-  const estado = course.estado ?? "sin_fechas";
-  const inicioPendiente = Boolean(
-    course.fecha_hoy && primeraFecha && course.fecha_hoy < primeraFecha
-  );
-
-  let titulo = "La asistencia no está disponible";
-  let detalle = "El formulario de asistencia solo está disponible en las fechas programadas del evento.";
-  let mensajeEnlace = "Si aún no estás inscrito, puedes registrarte aquí:";
-
-  if (estado === "proximo") {
-    titulo = inicioPendiente
-      ? `Este evento empieza el ${formatFechaLarga(primeraFecha)}`
-      : `La asistencia se habilita el ${formatFechaLarga(proximaFecha)}`;
-    detalle = inicioPendiente
-      ? "El formulario de asistencia se habilitará ese día."
-      : "El formulario solo está disponible en las fechas programadas del evento.";
-  } else if (estado === "finalizado") {
-    titulo = "Este evento ya finalizó";
-    detalle = "El formulario de asistencia ya no está disponible.";
-    mensajeEnlace = "Puedes revisar las próximas capacitaciones aquí:";
-  } else if (estado === "sin_fechas") {
-    titulo = "Este evento aún no tiene fechas programadas";
-    detalle = "Vuelve a consultar más adelante para conocer las fechas de la capacitación.";
-    mensajeEnlace = "Mientras tanto, puedes revisar las capacitaciones disponibles:";
-  }
-
-  const registrationUrl = slug
-    ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`
-    : "/ugseco/inscripciones";
-  const actionUrl = estado === "finalizado" ? "/ugseco/capacitaciones" : registrationUrl;
-  const actionLabel =
-    estado === "finalizado"
-      ? "Ver otras capacitaciones"
-      : "Ir al formulario de inscripción";
-
-  return (
-    <div className="rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 md:p-8">
-      <span className="inline-flex rounded-full bg-[#f7ecd2] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#8a5a00]">
-        Asistencia no disponible
-      </span>
-
-      <h3 className="mt-4 text-[22px] font-bold leading-tight text-[#124e78] md:text-[26px]">
-        {titulo}
-      </h3>
-
-      <p className="mt-3 text-[14px] leading-relaxed text-[#3e647d]">
-        {detalle}
-      </p>
-
-      {fechas.length > 0 && (
-        <ScheduleList fechas={fechas} horario={course.horario} />
-      )}
-
-      <p className="mt-6 text-[13px] text-[#3e647d]">{mensajeEnlace}</p>
-
-      <Link
-        to={actionUrl}
-        className="mt-3 inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-8 py-3 text-[14px] font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#20708a]"
-      >
-        {actionLabel}
-      </Link>
-    </div>
-  );
-}
-
 function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
   return (
     <div className="rounded-xl border border-input-error/30 bg-input-error/5 p-6 text-sm text-input-error">
@@ -587,7 +512,6 @@ export default function AsistenciaPresencialUgseco() {
   }, []);
 
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const location = window.location;
   const slugFromQuery = searchParams.get("slug");
   const slugFromPath = location.pathname.split("/").pop();
