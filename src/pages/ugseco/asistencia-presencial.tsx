@@ -588,7 +588,10 @@ export default function AsistenciaPresencialUgseco() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const slug = searchParams.get("slug");
+  const location = window.location;
+  const slugFromQuery = searchParams.get("slug");
+  const slugFromPath = location.pathname.split("/").pop();
+  const slug = slugFromQuery || (slugFromPath && slugFromPath !== "asistencia-presencial" ? slugFromPath : null);
   const [loadedCourse, setLoadedCourse] = useState<{
     slug: string;
     course: CourseDetail | null;
@@ -760,6 +763,8 @@ export default function AsistenciaPresencialUgseco() {
               <WelcomePanel enrollment={enrollment} course={course} onRegresar={() => { setEnrollment(null); setForm(emptyAsistenciaForm); }} />
             ) : needsRegistration ? (
               <QRRegistrationPanel slug={slug} documentNumber={form.documentNumber} onBack={() => { setNeedsRegistration(false); setAccessError(null); }} />
+            ) : isLoadingCourse ? (
+              <div className="flex min-h-[200px] items-center justify-center text-[#3e647d]">Cargando información del evento…</div>
             ) : !course ? (
               <LoadErrorPanel hasSlug={Boolean(slug)} />
             ) : course.estado && course.estado !== "disponible" ? (
