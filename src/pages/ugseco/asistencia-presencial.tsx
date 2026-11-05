@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
