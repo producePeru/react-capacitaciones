@@ -111,18 +111,42 @@ function formatFechas(fechas: CourseDate[]) {
   return `${labels.slice(0, -1).join(", ")} y ${labels[labels.length - 1]}`;
 }
 
+function to12Hour(time: string) {
+  const m = time.trim().match(/^(\d{1,2}):?(\d{2})?$/);
+  if (!m) return time;
+  let h = parseInt(m[1], 10);
+  const min = m[2] ? `:${m[2]}` : "";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}${min} ${ampm}`;
+}
+
 function formatHorario(horario: unknown) {
+  const convertRange = (txt: string) => {
+    return txt
+      .split("/")
+      .map((part) => part.trim())
+      .map((seg) => {
+        return seg.replace(/(\d{1,2}:\d{2})/g, (t) => to12Hour(t));
+      })
+      .join(" / ");
+  };
+
   if (Array.isArray(horario)) {
     const rangos = horario.flatMap((item) => {
       if (typeof item === "string" && item.trim() !== "") {
-        return [item.trim()];
+        return [convertRange(item.trim())];
       }
 
       if (item && typeof item === "object") {
         const sesion = item as { horaInicio?: unknown; horaFin?: unknown };
-        const inicio =
+        const inicioRaw =
           typeof sesion.horaInicio === "string" ? sesion.horaInicio.trim() : "";
-        const fin = typeof sesion.horaFin === "string" ? sesion.horaFin.trim() : "";
+        const finRaw = typeof sesion.horaFin === "string" ? sesion.horaFin.trim() : "";
+
+        const inicio = inicioRaw ? to12Hour(inicioRaw) : "";
+        const fin = finRaw ? to12Hour(finRaw) : "";
 
         if (inicio && fin) return [`${inicio} - ${fin}`];
         if (inicio) return [inicio];
@@ -135,7 +159,7 @@ function formatHorario(horario: unknown) {
   }
 
   if (typeof horario === "string" && horario.trim() !== "") {
-    return horario;
+    return convertRange(horario.trim());
   }
 
   return "Por confirmar";

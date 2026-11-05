@@ -7,9 +7,11 @@ const CoursesTemplate = lazy(() => import("@/pages/ugseco/capacitaciones"));
 const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
 const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
 const InscripcionesSinCooperativa = lazy(() => import("@/pages/ugseco/inscripciones-sin-cooperativa"));
+import AsistenciaPresencialUgseco from "@/pages/ugseco/asistencia-presencial";
 
 const CapacitacionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/capacitaciones"));
 const InscripcionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/inscripciones"));
+import ComprasMyperuPruebaSalida from "@/pages/compras-myperu/prueba-salida";
 
 export const routes: RouteObject[] = [
 
@@ -37,7 +39,12 @@ export const routes: RouteObject[] = [
     path: "/ugseco/inscripciones-sin-cooperativa",
     element: <InscripcionesSinCooperativa />,
   },
+  {
+    path: "/ugseco/asistencia-presencial",
+    element: <AsistenciaPresencialUgseco />,
+  },
 
+  //===================================> compras MYPEru
   {
     path: "/compras-myperu",
     element: <CapacitacionesComprasMYPEru />,
@@ -45,6 +52,10 @@ export const routes: RouteObject[] = [
   {
     path: "/compras-myperu/inscripciones",
     element: <InscripcionesComprasMYPEru />,
+  },
+  {
+    path: "/compras-myperu/prueba-salida",
+    element: <ComprasMyperuPruebaSalida />,
   },
 
   {
