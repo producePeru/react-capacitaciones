@@ -7,7 +7,7 @@ const CoursesTemplate = lazy(() => import("@/pages/ugseco/capacitaciones"));
 const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
 const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
 const InscripcionesSinCooperativa = lazy(() => import("@/pages/ugseco/inscripciones-sin-cooperativa"));
-import AsistenciaPresencialUgseco from "@/pages/ugseco/asistencia-presencial";
+const AsistenciaPresencialUgseco = lazy(() => import("@/pages/ugseco/asistencia-presencial"));
 
 const CapacitacionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/capacitaciones"));
 const InscripcionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/inscripciones"));
