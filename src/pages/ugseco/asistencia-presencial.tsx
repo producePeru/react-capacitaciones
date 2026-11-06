@@ -573,6 +573,12 @@ export default function AsistenciaPresencialUgseco() {
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
 
+  const eventoNoVigente = Boolean(
+    course?.fecha_hoy &&
+    course?.fechas?.[0] &&
+    course.fecha_hoy < course.fechas[0]
+  );
+
   const update = (patch: Partial<AsistenciaForm>) => {
     setForm((current) => ({ ...current, ...patch }));
     setAccessError(null);
@@ -691,25 +697,18 @@ export default function AsistenciaPresencialUgseco() {
               <div className="flex min-h-[200px] items-center justify-center text-[#3e647d]">Cargando información del evento…</div>
             ) : !course ? (
               <LoadErrorPanel hasSlug={Boolean(slug)} />
-            ) : (() => {
-              const fechas = course.fechas ?? [];
-              const primeraFecha = fechas[0] ?? null;
-              const hoy = course.fecha_hoy;
-              const noVigente = Boolean(hoy && primeraFecha && hoy < primeraFecha);
-              if (noVigente) {
-                return (
-                  <div className="mx-auto max-w-[420px] rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 text-center">
-                    <span className="inline-flex rounded-full bg-[#f7ecd2] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#8a5a00]">
-                      Evento no vigente
-                    </span>
-                    <h3 className="mt-4 text-[18px] font-bold text-[#124e78]">La asistencia aún no está disponible</h3>
-                    <p className="mt-2 text-[14px] text-[#3e647d]">
-                      Este evento inicia el {formatFechaLarga(primeraFecha)}. El formulario se habilitará ese día.
-                    </p>
-                  </div>
-                );
-              }
-              return <form
+            ) : eventoNoVigente ? (
+              <div className="mx-auto max-w-[420px] rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 text-center">
+                <span className="inline-flex rounded-full bg-[#f7ecd2] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#8a5a00]">
+                  Evento no vigente
+                </span>
+                <h3 className="mt-4 text-[18px] font-bold text-[#124e78]">La asistencia aún no está disponible</h3>
+                <p className="mt-2 text-[14px] text-[#3e647d]">
+                  Este evento inicia el {formatFechaLarga(course.fechas?.[0])}. El formulario se habilitará ese día.
+                </p>
+              </div>
+            ) : (
+              <form
                 noValidate
                 onSubmit={handleSubmit}
                 className="mx-auto max-w-[420px] [&_label]:text-[16px] [&_label]:font-medium"
