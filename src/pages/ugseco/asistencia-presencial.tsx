@@ -199,11 +199,6 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
   return (
     <div className="grid bg-[#f7fdff] md:grid-cols-[1fr_380px]">
       <div className="relative px-8 py-8 md:px-14 md:py-12">
-        <h1 className="mb-2 max-w-3xl text-[16px] leading-[1.15] md:text-[16px]">
-          <span className="text-[#124e78]">
-            Capacitaciones a las cooperativas
-          </span>
-        </h1>
 
         <h2 className="max-w-3xl text-[24px] font-extrabold leading-[1.15] md:text-[30px]">
           <span className="text-[#2b8aa8]">
@@ -554,6 +549,23 @@ export default function AsistenciaPresencialUgseco() {
   }, [slug, infoRefreshKey]);
 
   useEffect(() => {
+    if (!slug) return;
+    let active = true;
+    httpRequest<{ status: number; data?: { inscritos: number; presentes: number; faltan?: number } }>({
+      method: "GET",
+      url: `event-pnte-public/data-event-count/${encodeURIComponent(slug)}`,
+    })
+      .then((response) => {
+        if (!active) return;
+        if (response?.data) setEventCount(response.data);
+      })
+      .catch((err) => {
+        console.error("data-event-count error", { slug, err });
+      });
+    return () => { active = false; };
+  }, [slug]);
+
+  useEffect(() => {
     if (!redirecting || !slug) return;
 
     console.warn("asistencia-presencial: redirecting activado", { slug });
@@ -569,6 +581,7 @@ export default function AsistenciaPresencialUgseco() {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [needsRegistration, setNeedsRegistration] = useState(false);
+  const [eventCount, setEventCount] = useState<{ inscritos: number; presentes: number; faltan?: number } | null>(null);
 
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
@@ -627,6 +640,13 @@ export default function AsistenciaPresencialUgseco() {
       .then((response) => {
         if (response.status === 200 && response.data) {
           setEnrollment(response.data);
+          // Refrescar conteo de asistencia para que el administrador vea el incremento
+          httpRequest<{ status: number; data?: { inscritos: number; presentes: number; faltan?: number } }>({
+            method: "GET",
+            url: `event-pnte-public/data-event-count/${encodeURIComponent(slug)}`,
+          }).then((countResp) => {
+            if (countResp?.data) setEventCount(countResp.data);
+          }).catch(() => { });
           return;
         }
 
@@ -685,6 +705,32 @@ export default function AsistenciaPresencialUgseco() {
       <div className="mx-auto w-full max-w-[1000px] px-4 md:px-8">
         <section className="relative min-h-[94vh] overflow-hidden rounded-md border border-[#e0e0e0] bg-white shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
           <HeroBanner course={course} />
+
+          {eventCount && course && (
+            <div className="flex items-center justify-between gap-4 border-y border-[#e0e0e0] bg-[#f7fdff] px-8 py-3 md:px-14">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2b8aa8]/10 text-[#2b8aa8]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-[#124e78]">Asistencia</p>
+                  <p className="text-[15px] font-bold text-[#124e78]">
+                    {eventCount.presentes ?? 0}/{eventCount.inscritos ?? 0}
+                    <span className="ml-1 text-[13px] font-medium text-[#3e647d]">asistentes / inscritos</span>
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[12px] text-[#3e647d]">Van {eventCount.presentes ?? 0} de {eventCount.inscritos ?? 0} inscritos</p>
+                <p className="text-[11px] text-[#6b7280]">Actualizado en tiempo real</p>
+              </div>
+            </div>
+          )}
 
           <div className="h-[8px] w-full bg-[#2b8aa8]" />
 

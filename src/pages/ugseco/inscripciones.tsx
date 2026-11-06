@@ -1247,6 +1247,7 @@ function RegistrationStepper({
   const [showParticipanteErrors, setShowParticipanteErrors] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSameDay, setIsSameDay] = useState(false);
   const participanteHandle = useRef<ParticipanteHandle>({
     validate: () => false,
     getValues: () => ({
@@ -1329,27 +1330,32 @@ function RegistrationStepper({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await httpRequest({
+      const regResponse = await httpRequest({
         method: "POST",
         url: "event-pnte-public/registro-cooperativas",
         data: payload,
       });
 
-      await httpRequest({
-        method: "GET",
-        url: "event-pnte-public/email-participacion-cooperativas-ugseco",
-        params: {
-          slug,
-          correo: participanteValues.correo,
-          nombres: [
-            participanteValues.nombres,
-            participanteValues.apellidoPaterno,
-            participanteValues.apellidoMaterno,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        },
-      }).catch(() => undefined);
+      const sameDay = regResponse?.data?.is_same_day === true;
+      setIsSameDay(sameDay);
+
+      if (!sameDay) {
+        await httpRequest({
+          method: "GET",
+          url: "event-pnte-public/email-participacion-cooperativas-ugseco",
+          params: {
+            slug,
+            correo: participanteValues.correo,
+            nombres: [
+              participanteValues.nombres,
+              participanteValues.apellidoPaterno,
+              participanteValues.apellidoMaterno,
+            ]
+              .filter(Boolean)
+              .join(" "),
+          },
+        }).catch(() => undefined);
+      }
 
       setSuccessOpen(true);
     } catch {
@@ -1452,8 +1458,8 @@ function RegistrationStepper({
               </h2>
 
               <p className="mt-2 text-[14px] leading-relaxed text-[#3e647d]">
-                Tu registro se completó correctamente. Ahora puedes unirte a
-                nuestra comunidad y agendar la capacitación en tu calendario.
+                Tu registro se completó correctamente.
+                {isSameDay ? " " : " Ahora puedes unirte a nuestra comunidad y agendar la capacitación en tu calendario."}
               </p>
 
               <a
@@ -1474,31 +1480,33 @@ function RegistrationStepper({
                 Únete a nuestra comunidad en WhatsApp
               </a>
 
-              <a
-                href={calendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#2b8aa8] bg-white px-4 py-3 text-[14px] font-bold text-[#2b8aa8] transition-colors hover:bg-[#f0f9fc]"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                  aria-hidden="true"
+              {!isSameDay && (
+                <a
+                  href={calendarUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#2b8aa8] bg-white px-4 py-3 text-[14px] font-bold text-[#2b8aa8] transition-colors hover:bg-[#f0f9fc]"
                 >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                  <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
-                </svg>
-                Agendar en Google Calendar
-              </a>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
+                  </svg>
+                  Agendar en Google Calendar
+                </a>
+              )}
 
               <p className="mt-5 w-full border-t border-[#f1f5f9] pt-4 text-[12px] text-[#64748b]">
                 Cualquier consulta escribir a{" "}
@@ -1820,30 +1828,32 @@ export default function Inscripciones() {
     slug: string;
     course: CourseDetail | null;
   } | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     if (!slug) return;
+    if (loadedCourse?.slug === slug) return;
 
+    const currentId = ++requestIdRef.current;
     let active = true;
 
-    httpRequest<CoursesResponse>({
+    httpRequest<{ status: number; data: CourseDetail | null }>({
       method: "GET",
-      url: "event-pnte-public/cursos-cooperativas-ugseco",
+      url: `event-pnte-public/detalle-curso-cooperativas-ugseco/${slug}`,
     })
       .then((response) => {
-        if (!active) return;
-
-        const found = (response.data ?? []).find((item) => item.slug === slug);
-        setLoadedCourse({ slug, course: found ?? null });
+        if (!active || requestIdRef.current !== currentId) return;
+        setLoadedCourse({ slug, course: response.data ?? null });
       })
       .catch(() => {
-        if (active) setLoadedCourse({ slug, course: null });
+        if (!active || requestIdRef.current !== currentId) return;
+        setLoadedCourse({ slug, course: null });
       });
 
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, loadedCourse?.slug]);
 
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
