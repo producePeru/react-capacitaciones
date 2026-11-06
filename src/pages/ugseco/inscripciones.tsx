@@ -1330,13 +1330,13 @@ function RegistrationStepper({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const regResponse = await httpRequest({
+      const regResponse = await httpRequest<{ status: number; message: string; empresario_id?: number; is_same_day?: boolean }>({
         method: "POST",
         url: "event-pnte-public/registro-cooperativas",
         data: payload,
       });
 
-      const sameDay = regResponse?.data?.is_same_day === true;
+      const sameDay = regResponse?.is_same_day === true;
       setIsSameDay(sameDay);
 
       if (!sameDay) {
@@ -1542,11 +1542,6 @@ type CourseDetail = {
   asesor: string | null;
   link?: string | null;
   direccion?: string | null;
-};
-
-type CoursesResponse = {
-  status: number;
-  data: CourseDetail[];
 };
 
 function formatFechaLarga(fecha?: string | null) {
