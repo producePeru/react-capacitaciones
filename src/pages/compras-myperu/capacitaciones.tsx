@@ -198,7 +198,7 @@ function HeroBanner() {
             <span className="text-[#2b8aa8]">compras MYPErú</span>
           </h1>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-[#2f5670] md:text-[17px]">
-            Accede a capacitaciones gratuitas si formas parte de una cooperativa. Elige los cursos que mejor se adapten a tus necesidades e impulsa tu desarrollo y el de tu organización.
+            Accede a capacitaciones gratuitas si formas parte de compras MYPErú. Elige los cursos que mejor se adapten a tus necesidades e impulsa tu desarrollo y el de tu organización.
           </p>
         </div>
 
