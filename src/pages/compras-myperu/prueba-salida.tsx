@@ -391,16 +391,16 @@ function UnavailablePanel({
     course.fecha_hoy && primeraFecha && course.fecha_hoy < primeraFecha
   );
 
-  let titulo = "La asistencia no está disponible";
+  let titulo = "Prueba de salida";
   let detalle = "El formulario de asistencia solo está disponible en las fechas programadas del evento.";
   let mensajeEnlace = "Si aún no estás inscrito, puedes registrarte aquí:";
 
   if (estado === "proximo") {
     titulo = inicioPendiente
-      ? `Este evento empieza el ${formatFechaLarga(primeraFecha)}`
+      ? `Este test se habilita el ${formatFechaLarga(primeraFecha)}`
       : `La asistencia se habilita el ${formatFechaLarga(proximaFecha)}`;
     detalle = inicioPendiente
-      ? "El formulario de asistencia se habilitará ese día."
+      ? "El formulario de la Prueba de salida se habilitará ese día."
       : "El formulario solo está disponible en las fechas programadas del evento.";
   } else if (estado === "finalizado") {
     titulo = "Este evento ya finalizó";
