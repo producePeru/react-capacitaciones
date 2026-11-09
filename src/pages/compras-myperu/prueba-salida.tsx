@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import comprasIcon from "@/assets/icons/compras-myperu.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
-import { PruebaSalidaComprasMyPeru } from "@/components/test/PruebaSalidaComprasMyPeru";
+import PruebaSalidaComprasMyPeru from "@/components/test/PruebaSalidaComprasMyPeru";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
