@@ -424,7 +424,7 @@ function UnavailablePanel({
   return (
     <div className="rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 md:p-8">
       <span className="inline-flex rounded-full bg-[#f7ecd2] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#8a5a00]">
-        Asistencia no disponible
+        Prueba de salida
       </span>
 
       <h3 className="mt-4 text-[22px] font-bold leading-tight text-[#124e78] md:text-[26px]">
