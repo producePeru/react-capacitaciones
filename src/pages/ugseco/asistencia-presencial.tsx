@@ -296,9 +296,10 @@ function QRRegistrationPanel({
   documentNumber: string;
   onBack: () => void;
 }) {
+  const base = window.location.origin;
   const registrationUrl = slug
-    ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}&dni=${encodeURIComponent(documentNumber)}`
-    : "/ugseco/inscripciones";
+    ? `${base}/ugseco/inscripciones?slug=${encodeURIComponent(slug)}&dni=${encodeURIComponent(documentNumber)}`
+    : `${base}/ugseco/inscripciones`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(registrationUrl)}`;
 
   return (

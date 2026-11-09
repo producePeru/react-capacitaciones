@@ -1,8 +1,9 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import ugsecoIcon from "@/assets/icons/ugseco.ico";
+import comprasIcon from "@/assets/icons/compras-myperu.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
+import PruebaSalidaComprasMyPeru from "@/components/test/PruebaSalidaComprasMyPeru";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -304,11 +305,6 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
   return (
     <div className="grid bg-[#f7fdff] md:grid-cols-[1fr_380px]">
       <div className="relative px-8 py-8 md:px-14 md:py-12">
-        <h1 className="mb-2 max-w-3xl text-[16px] leading-[1.15] md:text-[16px]">
-          <span className="text-[#124e78]">
-            Capacitaciones a las cooperativas
-          </span>
-        </h1>
 
         <h2 className="max-w-3xl text-[24px] font-extrabold leading-[1.15] md:text-[30px]">
           <span className="text-[#2b8aa8]">
@@ -333,16 +329,7 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
             <span className="font-semibold text-[#124e78]">Hora: </span>
             <span className="text-[#3e647d]">{formatHora(course?.horario)}</span>
           </p>
-          <p className="flex items-center gap-2">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 7l-7 5 7 5V7z" />
-              <rect x="1" y="5" width="15" height="14" rx="2" />
-            </svg>
-            <span className="font-semibold text-[#124e78]">Modalidad: </span>
-            <span className="text-[#3e647d]">
-              {formatModalidad(course?.modalidad)}
-            </span>
-          </p>
+
           {!esVirtual && course?.direccion && (
             <p className="flex items-start gap-2">
               <svg className="mt-0.5 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -393,109 +380,6 @@ function PageLoading() {
           Un momento, estamos preparando la información.
         </p>
       </div>
-    </div>
-  );
-}
-
-function WelcomePanel({
-  enrollment,
-  course,
-}: {
-  enrollment: Enrollment;
-  course: CourseDetail | null;
-}) {
-  const fechas = enrollment.fechas ?? course?.fechas ?? [];
-  const link = enrollment.link || course?.link || null;
-  const participante = enrollment.participante;
-  const nombre = [
-    participante?.nombres,
-    participante?.apellido_paterno,
-    participante?.apellido_materno,
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const tema = enrollment.tema ?? course?.tema ?? "la capacitación";
-  const primeraFecha = fechas[0] ?? null;
-  const fechaAsistencia = enrollment.asistencia?.fecha ?? null;
-
-  return (
-    <div className="rounded-xl border border-[#cfe0ec] p-6 md:p-8">
-      <span className="inline-flex rounded-full bg-[#e9f1f7] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#2b8aa8]">
-        Inscripción confirmada
-      </span>
-
-      <h3 className="mt-4 text-[22px] font-bold leading-tight text-[#124e78] md:text-[26px]">
-        ¡Bienvenido(a) a la capacitación{nombre ? `, ${nombre}` : ""}!
-      </h3>
-
-      <p className="mt-3 text-[14px] leading-relaxed text-[#3e647d]">
-        Estás inscrito en <strong className="text-[#124e78]">{tema}</strong>.{" "}
-        {fechaAsistencia &&
-          primeraFecha &&
-          fechaAsistencia !== primeraFecha ? (
-          <>
-            Hoy es la sesión del{" "}
-            <strong className="text-[#124e78]">
-              {formatFechaLarga(fechaAsistencia)}
-            </strong>
-            .
-          </>
-        ) : (
-          <>
-            La capacitación empieza el{" "}
-            <strong className="text-[#124e78]">
-              {formatFechaLarga(primeraFecha)}
-            </strong>
-            .
-          </>
-        )}
-      </p>
-
-      <ScheduleList
-        fechas={fechas}
-        horario={enrollment.horario ?? course?.horario}
-      />
-
-      {enrollment.asistencia?.marcada && (
-        <p className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#e9f7ef] px-4 py-3 text-sm font-semibold text-[#1e7a46]">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="shrink-0"
-          >
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-          Asistencia registrada para el{" "}
-          {formatFechaLarga(enrollment.asistencia.fecha)}.
-        </p>
-      )}
-
-      {enrollment.asistencia && !enrollment.asistencia.habilitada && (
-        <p className="mt-5 rounded-lg border border-[#f0c27b]/40 bg-[#fff8ec] px-4 py-3 text-sm text-[#8a5a00]">
-          La marcación de asistencia está deshabilitada para este evento.
-        </p>
-      )}
-
-      {link ? (
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 block w-fit items-center justify-center rounded-md bg-[#2b8aa8] px-10 py-3 text-[14px] font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#20708a]"
-        >
-          Únete
-        </a>
-      ) : (
-        <p className="mt-6 rounded-lg border border-[#f0c27b]/40 bg-[#fff8ec] px-4 py-3 text-sm text-[#8a5a00]">
-          El enlace de la sala se habilitará pronto.
-        </p>
-      )}
     </div>
   );
 }
@@ -594,11 +478,11 @@ function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
 }
 
 export default function ComprasMyperuPruebaSalida() {
-  useFavicon(ugsecoIcon);
+  useFavicon(comprasIcon);
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = "asistencia | UGSECO";
+    document.title = "compras MYPErú | Prueba salida";
     return () => {
       document.title = previousTitle;
     };
@@ -808,7 +692,13 @@ export default function ComprasMyperuPruebaSalida() {
 
           <div className="px-8 py-6 md:px-14 md:py-10">
             {enrollment ? (
-              <WelcomePanel enrollment={enrollment} course={course} />
+              <PruebaSalidaComprasMyPeru
+                slug={slug}
+                numeroDni={form.documentNumber}
+                date={enrollment.fechas?.[0] ?? ""}
+                horarioInicio={""}
+                horarioFin={""}
+              />
             ) : !course ? (
               <LoadErrorPanel hasSlug={Boolean(slug)} />
             ) : course.estado && course.estado !== "disponible" ? (
@@ -820,11 +710,10 @@ export default function ComprasMyperuPruebaSalida() {
                 className="[&_label]:text-[14px] [&_label]:font-normal"
               >
                 <h3 className="mb-4 text-[15px] font-bold text-[#2b8aa8]">
-                  Asistencia de hoy
+                  Desarrollar la Prueba de Salida
                 </h3>
                 <p className="mb-6 text-[14px] text-[#3e647d]">
-                  Ingresa tus datos para registrar tu asistencia del{" "}
-                  {formatFechaLarga(course.fecha_hoy)}.
+                  Ingresa tus datos para iniciar la Prueba de Salida
                 </p>
 
                 <div className="grid grid-cols-1 items-start gap-x-6 gap-y-5 md:grid-cols-3">

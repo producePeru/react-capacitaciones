@@ -1,9 +1,10 @@
 
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
+import EventoCaducado from "@/components/alerts/EventoCaducado";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -1853,8 +1854,22 @@ export default function Inscripciones() {
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
 
+  const isEventoCaducado = useMemo(() => {
+    if (!course?.fechas || course.fechas.length === 0) return false;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return course.fechas.every((f) => {
+      const d = new Date(`${f}T00:00:00`);
+      return !isNaN(d.getTime()) && d < hoy;
+    });
+  }, [course]);
+
   if (isLoadingCourse) {
     return <PageLoading />;
+  }
+
+  if (isEventoCaducado) {
+    return <EventoCaducado />;
   }
 
   return (
