@@ -190,14 +190,6 @@ function formatHora(horario: unknown) {
   return "Por confirmar";
 }
 
-function formatModalidad(modalidad: string | null | undefined) {
-  const value = modalidad?.trim().toUpperCase();
-
-  if (!value) return "Por confirmar";
-
-  return value.charAt(0) + value.slice(1).toLowerCase();
-}
-
 function ScheduleList({
   fechas,
   horario,
