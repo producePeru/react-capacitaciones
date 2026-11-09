@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function EventoCaducado() {
   return (
     <div className="min-h-screen w-full bg-[#fff] py-6">
