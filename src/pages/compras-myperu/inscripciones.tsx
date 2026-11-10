@@ -1190,6 +1190,7 @@ function RegistrationStepper({
       celular: "",
       correo: "",
       pais: "",
+      fecha_nacimiento: "",
     }),
   });
   const last = current === steps.length - 1;
