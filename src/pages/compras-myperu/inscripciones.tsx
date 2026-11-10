@@ -757,6 +757,7 @@ type ParticipanteSnapshot = {
   celular: string;
   correo: string;
   pais: string;
+  fecha_nacimiento: string;
 };
 
 type ParticipanteHandle = {
@@ -782,6 +783,7 @@ function StepParticipante({
   const [celular, setCelular] = useState("");
   const [correo, setCorreo] = useState("");
   const [country, setCountry] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
   const [loadingDocument, setLoadingDocument] = useState(false);
   const lastLookupDocument = useRef<string | null>(null);
   const lookupDocumentId = useRef(0);
@@ -889,6 +891,25 @@ function StepParticipante({
       ? "El país de nacimiento es obligatorio."
       : null;
 
+  const isAdult =
+    fechaNacimiento
+      ? (() => {
+          const birth = new Date(fechaNacimiento);
+          const today = new Date();
+          let age = today.getFullYear() - birth.getFullYear();
+          const m = today.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+          return age >= 18;
+        })()
+      : false;
+
+  const fechaNacimientoError =
+    showErrors && fechaNacimiento === ""
+      ? "La fecha de nacimiento es obligatoria."
+      : showErrors && fechaNacimiento !== "" && !isAdult
+      ? "Debes ser mayor de 18 años para registrarte."
+      : null;
+
   const documentNumberValid = documentRule
     ? documentNumber.length === documentRule.length
     : documentNumber.trim() !== "";
@@ -902,7 +923,9 @@ function StepParticipante({
     discapacidad !== "" &&
     /^9\d{8}$/.test(celular) &&
     EMAIL_REGEX.test(correo.trim()) &&
-    (isDni || country !== "");
+    (isDni || country !== "") &&
+    fechaNacimiento !== "" &&
+    isAdult;
 
   useEffect(() => {
     handleRef.current = {
@@ -918,6 +941,7 @@ function StepParticipante({
         celular,
         correo,
         pais: isDni ? peruValueStr : country,
+        fecha_nacimiento: fechaNacimiento,
       }),
     };
   });
@@ -1114,6 +1138,25 @@ function StepParticipante({
           filter={isDni ? isPeru : isNotPeru}
           error={paisError}
         />
+        <div className="grid gap-2">
+          <Label htmlFor="fecha-nacimiento">Fecha de nacimiento</Label>
+          <BrandInput
+            id="fecha-nacimiento"
+            type="date"
+            value={fechaNacimiento}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setFechaNacimiento(event.target.value)
+            }
+            state={fechaNacimientoError ? "error" : "default"}
+            aria-invalid={fechaNacimientoError ? true : undefined}
+            aria-describedby={fechaNacimientoError ? "fecha-nacimiento-error" : undefined}
+          />
+          {fechaNacimientoError && (
+            <p id="fecha-nacimiento-error" className="text-xs text-input-error">
+              {fechaNacimientoError}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1204,6 +1247,7 @@ function RegistrationStepper({
       celular: participanteValues.celular,
       correo_electronico: participanteValues.correo,
       actividad_comercial_nombre: empresa.actividad,
+      fecha_nacimiento: participanteValues.fecha_nacimiento,
     };
 
     setSubmitting(true);
