@@ -894,21 +894,21 @@ function StepParticipante({
   const isAdult =
     fechaNacimiento
       ? (() => {
-          const birth = new Date(fechaNacimiento);
-          const today = new Date();
-          let age = today.getFullYear() - birth.getFullYear();
-          const m = today.getMonth() - birth.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-          return age >= 18;
-        })()
+        const birth = new Date(fechaNacimiento);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        return age >= 18;
+      })()
       : false;
 
   const fechaNacimientoError =
     showErrors && fechaNacimiento === ""
       ? "La fecha de nacimiento es obligatoria."
       : showErrors && fechaNacimiento !== "" && !isAdult
-      ? "Debes ser mayor de 18 años para registrarte."
-      : null;
+        ? "Debes ser mayor de 18 años para registrarte."
+        : null;
 
   const documentNumberValid = documentRule
     ? documentNumber.length === documentRule.length
@@ -1165,9 +1165,11 @@ function StepParticipante({
 function RegistrationStepper({
   slug,
   course,
+  selectedDate,
 }: {
   slug: string | null;
   course: CourseDetail | null;
+  selectedDate?: string;
 }) {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
@@ -1193,8 +1195,9 @@ function RegistrationStepper({
       fecha_nacimiento: "",
     }),
   });
+
   const last = current === steps.length - 1;
-  const calendarUrl = buildGoogleCalendarUrl(course);
+  const calendarUrl = buildGoogleCalendarUrl(course, selectedDate);
 
   const handleNext = () => {
     if (current === 0 && !isEmpresaFormValid(empresa)) {
@@ -1249,6 +1252,7 @@ function RegistrationStepper({
       correo_electronico: participanteValues.correo,
       actividad_comercial_nombre: empresa.actividad,
       fecha_nacimiento: participanteValues.fecha_nacimiento,
+      fecha_seleccionada: selectedDate || null,
     };
 
     setSubmitting(true);
@@ -1256,7 +1260,7 @@ function RegistrationStepper({
     try {
       await httpRequest({
         method: "POST",
-        url: "event-pnte-public/registro-cooperativas",
+        url: "event-pnte-public/registro-empresario-compras-myperu",
         data: payload,
       });
 
@@ -1370,7 +1374,7 @@ function RegistrationStepper({
               </h2>
 
               <p className="mt-2 text-[14px] leading-relaxed text-[#3e647d]">
-                Tu registro se completó correctamente. Ahora puedes agendar la capacitación en tu calendario.
+                Tu registro se completó correctamente. {selectedDate ? `Tu capacitación está agendada para el ${new Date(selectedDate + "T00:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })}. Ahora puedes agendarla en tu calendario.` : " Ahora puedes agendar la capacitación en tu calendario."}
               </p>
 
               {/* <a
@@ -1538,7 +1542,7 @@ function parseHorarioRango(horario: unknown) {
   return { start, end };
 }
 
-function buildGoogleCalendarUrl(course: CourseDetail | null) {
+function buildGoogleCalendarUrl(course: CourseDetail | null, selectedDate?: string) {
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: course?.tema?.trim() || "Capacitación UGSEco",
@@ -1558,7 +1562,7 @@ function buildGoogleCalendarUrl(course: CourseDetail | null) {
   const location = course?.link || course?.direccion;
   if (location) params.set("location", location);
 
-  const fecha = course?.fechas?.[0] ?? null;
+  const fecha = selectedDate ?? course?.fechas?.[0] ?? null;
 
   if (fecha) {
     const [year, month, day] = fecha.split("-").map(Number);
@@ -1606,11 +1610,13 @@ function buildGoogleCalendarUrl(course: CourseDetail | null) {
 function HeroBanner({
   course,
   loading,
+  selectedDate,
 }: {
   course: CourseDetail | null;
   loading: boolean;
+  selectedDate?: string;
 }) {
-  const fecha = course?.fechas?.[0] ?? null;
+  const fecha = selectedDate ?? course?.fechas?.[0] ?? null;
   const esVirtual = (course?.modalidad ?? "").trim().toUpperCase() === "VIRTUAL";
 
   return (
@@ -1760,25 +1766,73 @@ export default function Inscripciones() {
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
 
+  const today = new Date().toISOString().split("T")[0];
+  const availableDates = (course?.fechas ?? []).filter((f) => f >= today);
+
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [showDateModal, setShowDateModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (availableDates.length > 1) {
+      setShowDateModal(true);
+      if (!selectedDate) setSelectedDate(availableDates[0]);
+    } else if (availableDates.length === 1) {
+      setSelectedDate(availableDates[0]);
+      setShowDateModal(false);
+    } else {
+      setSelectedDate("");
+      setShowDateModal(false);
+    }
+  }, [course?.fechas]);
+
   if (isLoadingCourse) {
     return <PageLoading />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#fff] py-6">
-      <div className="mx-auto w-full max-w-[1000px] px-4 md:px-8">
-        <section className="relative min-h-[100vh] overflow-hidden rounded-md border border-[#e0e0e0] bg-white shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
-          <HeroBanner course={course} loading={isLoadingCourse} />
-
-          {/* franja de unión */}
-          <div className="h-[8px] w-full bg-[#2b8aa8]" />
-
-          <div className="px-8 py-6 md:px-14 md:py-10">
-            <RegistrationStepper slug={slug} course={course} />
+    <>
+      {showDateModal && availableDates.length > 1 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-[#124e78]">Selecciona la fecha de asistencia</h3>
+            <p className="mt-1 text-sm text-[#3e647d]">Elige la fecha en la que prefieres participar.</p>
+            <div className="mt-4 grid gap-3">
+              {availableDates.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setSelectedDate(d)}
+                  className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${selectedDate === d ? "border-[#2b8aa8] bg-[#e6f4f9]" : "border-[#e0e0e0] hover:border-[#2b8aa8]/50"}`}
+                >
+                  <span className="font-semibold">
+                    {new Date(d + "T00:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setShowDateModal(false)} className="rounded-md px-4 py-2 text-sm font-semibold text-[#124e78] hover:bg-gray-100">Cancelar</button>
+              <button type="button" onClick={() => setShowDateModal(false)} className="rounded-md bg-[#2b8aa8] px-4 py-2 text-sm font-bold text-white hover:bg-[#20708a]">Continuar</button>
+            </div>
           </div>
-        </section>
+        </div>
+      )}
 
+      <div className="min-h-screen w-full bg-[#fff] py-6">
+        <div className="mx-auto w-full max-w-[1000px] px-4 md:px-8">
+          <section className="relative min-h-[100vh] overflow-hidden rounded-md border border-[#e0e0e0] bg-white shadow-[0_12px_24px_rgba(0,0,0,0.08)]">
+            <HeroBanner course={course} loading={isLoadingCourse} selectedDate={selectedDate || undefined} />
+
+            {/* franja de unión */}
+            <div className="h-[8px] w-full bg-[#2b8aa8]" />
+
+            <div className="px-8 py-6 md:px-14 md:py-10">
+              <RegistrationStepper slug={slug} course={course} selectedDate={selectedDate} />
+            </div>
+          </section>
+
+        </div>
       </div>
-    </div>
+    </>
   );
 }
