@@ -13,6 +13,10 @@ const CapacitacionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/ca
 const InscripcionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/inscripciones"));
 import ComprasMyperuPruebaSalida from "@/pages/compras-myperu/prueba-salida";
 
+const CapacitacionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/capacitaciones"));
+const InscripcionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/inscripciones"));
+
+
 export const routes: RouteObject[] = [
 
   {
@@ -58,8 +62,20 @@ export const routes: RouteObject[] = [
     element: <ComprasMyperuPruebaSalida />,
   },
 
+  //===================================> Reactiva sector Textil
+  {
+    path: "/reactiva-sector",
+    element: <CapacitacionesReactivaSector />,
+  },
+  {
+    path: "/reactiva-sector/inscripciones",
+    element: <InscripcionesReactivaSector />,
+  },
+
   {
     path: "*",
     element: <Navigate to="/ugseco/capacitaciones" replace />,
   },
+
+
 ];
