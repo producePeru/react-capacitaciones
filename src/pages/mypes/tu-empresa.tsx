@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import mypesStore from "@/assets/images/mypes-store.jpeg";
+import mypesStore from "@/assets/images/mypes-store.png";
 // import pointPhone from "@/assets/points/point-1.png";
 // import pointClock from "@/assets/points/point-2.png";
 // import pointDiscount from "@/assets/points/point-3.png";
@@ -20,6 +20,7 @@ type Store = {
   descripcion?: string | null;
   region?: string | null;
   provincia?: string | null;
+  numero_dni?: string | null;
 };
 
 type ApiInscrito = {
@@ -33,6 +34,7 @@ type ApiInscrito = {
   descripcion?: string | null;
   region?: string | null;
   provincia?: string | null;
+  numero_dni?: string | null;
 };
 
 type ApiResponse = {
@@ -79,7 +81,7 @@ function StoreDescription({ description, onOpen }: { description: string; onOpen
 
   return (
     <div>
-      <p ref={descriptionRef} className="mt-2 line-clamp-3 text-xs leading-5 text-black/60">
+      <p ref={descriptionRef} className="mt-2 line-clamp-3 text-xs leading-5 text-black/60 sm:text-[13px]">
         {description}
       </p>
       {isTruncated && (
@@ -119,6 +121,7 @@ export default function TuEmpresa() {
   const loadingRef = useRef(false);
   const pageRef = useRef(0);
   const hasMoreRef = useRef(true);
+  const [orderSeed] = useState(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
 
   useEffect(() => {
     const loadNextPage = async () => {
@@ -135,6 +138,7 @@ export default function TuEmpresa() {
           params: {
             page: nextPage,
             pageSize: PAGE_SIZE,
+            seed: orderSeed,
           },
         });
 
@@ -149,6 +153,7 @@ export default function TuEmpresa() {
           descripcion: inscrito.descripcion || null,
           region: inscrito.region || null,
           provincia: inscrito.provincia || null,
+          numero_dni: inscrito.numero_dni || null,
         }));
 
         setStores((currentStores) => [...currentStores, ...newStores]);
@@ -211,11 +216,11 @@ export default function TuEmpresa() {
       <section className="w-full bg-[#f3f1ed]">
         <div className="mx-auto grid max-w-6xl sm:grid-cols-2">
           <div className="mype-hero-copy flex flex-col justify-center px-8 py-12 sm:px-12 lg:px-16 lg:py-16">
-            <h1 className="max-w-md font-display text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
-              Marcas con historia, hechas para quedarse.
+            <h1 className="max-w-md font-display text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-5xl">
+              El Papa vuelve a casa y el Perú muestra su talento
             </h1>
             <p className="mt-5 max-w-sm text-sm leading-6 text-black/60">
-              Conoce emprendimientos peruanos y encuentra una nueva marca para seguir, recomendar y elegir.
+              La visita del Papa León XIV es también una oportunidad para celebrar lo que somos y mostrar lo que producimos.
             </p>
             <a href="#marcas" className="mt-8 w-fit bg-[#171717] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#e93224]">
               Ver marcas
@@ -227,7 +232,7 @@ export default function TuEmpresa() {
             <img src={pointDiscount} alt="" aria-hidden="true" className="mype-point mype-point--discount" />
             <img src={pointGift} alt="" aria-hidden="true" className="mype-point mype-point--gift" />
             <img src={pointLocation} alt="" aria-hidden="true" className="mype-point mype-point--location" /> */}
-            <img src={mypesStore} alt="Emprendedores peruanos" className="absolute inset-0 block h-full w-full object-contain" />
+            <img src={mypesStore} alt="Emprendedores peruanos" className="absolute inset-0 block h-full w-full" />
           </div>
         </div>
       </section>
@@ -273,6 +278,11 @@ export default function TuEmpresa() {
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="text-sm font-bold leading-5 text-[#17212b] sm:text-base" title={store.nombre}>{store.nombre}</h2>
                   </div>
+                  {store.numero_dni && (
+                    <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.1em] text-black/45">
+                      DNI: <span className="text-black/60">{store.numero_dni}</span>
+                    </p>
+                  )}
                   {store.descripcion && (
                     <StoreDescription description={store.descripcion} onOpen={() => setSelectedStore(store)} />
                   )}
@@ -339,6 +349,11 @@ export default function TuEmpresa() {
               <h2 id="mype-modal-title" className="font-display text-2xl leading-tight text-[#17212b]">
                 {selectedStore.nombre}
               </h2>
+              {selectedStore.numero_dni && (
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-black/45">
+                  DNI: <span className="text-black/60">{selectedStore.numero_dni}</span>
+                </p>
+              )}
               {(selectedStore.region || selectedStore.provincia) && (
                 <div className="mt-3 inline-flex items-center rounded-full bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold text-[#d84432] ring-1 ring-[#f8c8bd]">
                   <span aria-hidden="true" className="mr-1">•</span>
@@ -368,13 +383,13 @@ export default function TuEmpresa() {
                 </div>
               ) : null}
 
-              <button
+              {/* <button
                 type="button"
                 onClick={() => setSelectedStore(null)}
                 className="mt-6 w-full bg-[#171717] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#e93224]"
               >
                 Cerrar
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
