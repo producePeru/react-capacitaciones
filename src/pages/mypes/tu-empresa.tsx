@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import mypesStore from "@/assets/images/mypes-store.jpeg";
-import pointPhone from "@/assets/points/point-1.png";
-import pointClock from "@/assets/points/point-2.png";
-import pointDiscount from "@/assets/points/point-3.png";
-import pointGift from "@/assets/points/point-4.png";
-import pointLocation from "@/assets/points/point-5.png";
+// import pointPhone from "@/assets/points/point-1.png";
+// import pointClock from "@/assets/points/point-2.png";
+// import pointDiscount from "@/assets/points/point-3.png";
+// import pointGift from "@/assets/points/point-4.png";
+// import pointLocation from "@/assets/points/point-5.png";
 import { httpRequest } from "@/services/api";
 
 type Social = {
