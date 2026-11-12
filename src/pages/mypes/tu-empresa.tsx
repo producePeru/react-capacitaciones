@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import mypesStore from "@/assets/images/mypes-store.png";
 // import pointPhone from "@/assets/points/point-1.png";
 // import pointClock from "@/assets/points/point-2.png";
@@ -114,6 +114,7 @@ function StoreDescription({ description, onOpen }: { description: string; onOpen
 export default function TuEmpresa() {
   const [stores, setStores] = useState<Store[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
@@ -122,62 +123,92 @@ export default function TuEmpresa() {
   const pageRef = useRef(0);
   const hasMoreRef = useRef(true);
   const [orderSeed] = useState(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+  const loadNextPageRef = useRef<() => void>(() => undefined);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    const loadNextPage = async () => {
-      if (loadingRef.current || !hasMoreRef.current) return;
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
 
-      const nextPage = pageRef.current + 1;
-      loadingRef.current = true;
-      setLoading(true);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-      try {
-        const response = await httpRequest<ApiResponse>({
-          method: "GET",
-          url: `event-pnte-public/inscritos-feria-page/${FERIA_SLUG}`,
-          params: {
-            page: nextPage,
-            pageSize: PAGE_SIZE,
-            seed: orderSeed,
-          },
-        });
+  const loadNextPage = useCallback(async () => {
+    if (loadingRef.current || !hasMoreRef.current) return;
 
-        const inscritos = (response.data?.data ?? []).filter(
-          (inscrito) => inscrito.fecha_asistencia === true,
-        );
-        const newStores = inscritos.map((inscrito) => ({
-          id: inscrito.id,
-          nombre: inscrito.nombre_comercial || inscrito.razon_social || "Empresa participante",
-          logo: inscrito.logo || inscrito.agregar_logo || null,
-          socials: inscrito.socials || [],
-          descripcion: inscrito.descripcion || null,
-          region: inscrito.region || null,
-          provincia: inscrito.provincia || null,
-          numero_dni: inscrito.numero_dni || null,
-        }));
+    const nextPage = pageRef.current + 1;
+    const requestId = requestIdRef.current;
+    loadingRef.current = true;
+    setLoading(true);
 
-        setStores((currentStores) => [...currentStores, ...newStores]);
-        pageRef.current = nextPage;
+    try {
+      const response = await httpRequest<ApiResponse>({
+        method: "GET",
+        url: `event-pnte-public/inscritos-feria-page/${FERIA_SLUG}`,
+        params: {
+          page: nextPage,
+          pageSize: PAGE_SIZE,
+          seed: orderSeed,
+          search: debouncedSearch,
+        },
+      });
 
-        const lastPage = response.data?.last_page ?? nextPage;
-        hasMoreRef.current = nextPage < lastPage;
-        setHasMore(hasMoreRef.current);
-      } catch (error) {
-        console.error("No se pudieron cargar las empresas de la feria:", error);
-      } finally {
+      const inscritos = (response.data?.data ?? []).filter(
+        (inscrito) => inscrito.fecha_asistencia === true,
+      );
+      const newStores = inscritos.map((inscrito) => ({
+        id: inscrito.id,
+        nombre: inscrito.nombre_comercial || inscrito.razon_social || "Empresa participante",
+        logo: inscrito.logo || inscrito.agregar_logo || null,
+        socials: inscrito.socials || [],
+        descripcion: inscrito.descripcion || null,
+        region: inscrito.region || null,
+        provincia: inscrito.provincia || null,
+        numero_dni: inscrito.numero_dni || null,
+      }));
+
+      if (requestId !== requestIdRef.current) return;
+
+      setStores((currentStores) => [...currentStores, ...newStores]);
+      pageRef.current = nextPage;
+
+      const lastPage = response.data?.last_page ?? nextPage;
+      hasMoreRef.current = nextPage < lastPage;
+      setHasMore(hasMoreRef.current);
+    } catch (error) {
+      console.error("No se pudieron cargar las empresas de la feria:", error);
+    } finally {
+      if (requestId === requestIdRef.current) {
         loadingRef.current = false;
         setLoading(false);
       }
+    }
+  }, [debouncedSearch, orderSeed]);
+
+  useEffect(() => {
+    loadNextPageRef.current = () => {
+      void loadNextPage();
     };
+  }, [loadNextPage]);
 
-    loadNextPage();
+  useEffect(() => {
+    requestIdRef.current += 1;
+    pageRef.current = 0;
+    hasMoreRef.current = true;
+    loadingRef.current = false;
+    setStores([]);
+    setHasMore(true);
+    setLoading(true);
 
+    void loadNextPage();
+  }, [loadNextPage]);
+
+  useEffect(() => {
     let observer: IntersectionObserver | null = null;
 
     if ("IntersectionObserver" in window) {
       observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) loadNextPage();
+          if (entry.isIntersecting) loadNextPageRef.current();
         },
         { rootMargin: "0px 0px 320px" },
       );
@@ -190,9 +221,7 @@ export default function TuEmpresa() {
     };
   }, []);
 
-  const visibleStores = stores.filter((store) =>
-    store.nombre.toLowerCase().includes(search.trim().toLowerCase()),
-  );
+  const visibleStores = stores;
 
   useEffect(() => {
     if (!selectedStore) return;
@@ -217,10 +246,10 @@ export default function TuEmpresa() {
         <div className="mx-auto grid max-w-6xl sm:grid-cols-2">
           <div className="mype-hero-copy flex flex-col justify-center px-8 py-12 sm:px-12 lg:px-16 lg:py-16">
             <h1 className="max-w-md font-display text-4xl leading-[1.02] tracking-[-0.03em] sm:text-5xl lg:text-5xl">
-              El Papa vuelve a casa y el Perú muestra su talento
+              El Papa vuelve a casa, Perú PRODUCE
             </h1>
             <p className="mt-5 max-w-sm text-sm leading-6 text-black/60">
-              La visita del Papa León XIV es también una oportunidad para celebrar lo que somos y mostrar lo que producimos.
+              Plataforma digital que reúne a las MYPE participantes de las ferias "El Papa vuelve a casa, Perú Produce", acercando su oferta al público y conectándolas con nuevas oportunidades comerciales a través de sus redes sociales.
             </p>
             <a href="#marcas" className="mt-8 w-fit bg-[#171717] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#e93224]">
               Ver marcas
