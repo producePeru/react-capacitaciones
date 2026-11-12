@@ -1,10 +1,45 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 @plugin '@tailwindcss/forms';
 
+@keyframes mype-point-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-12px) rotate(4deg); }
+}
+
+.mype-point {
+  position: absolute;
+  z-index: 2;
+  width: clamp(24px, 3vw, 38px);
+  filter: drop-shadow(0 10px 10px rgb(0 0 0 / 0.14));
+  animation: mype-point-float 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.mype-point--phone { left: -5%; top: 12%; animation-delay: -0.4s; }
+.mype-point--clock { right: 21%; top: 10%; animation-delay: -1.5s; }
+.mype-point--discount { left: -4%; bottom: 14%; animation-delay: -2.4s; }
+.mype-point--gift { right: -5%; top: 53%; animation-delay: -3.1s; }
+.mype-point--location { right: -6%; bottom: 3%; animation-delay: -0.9s; }
+
+@media (max-width: 639px) {
+  .mype-hero-copy { padding: 2.75rem 1.25rem 1.75rem; }
+  .mype-hero-copy h1 { font-size: 2.7rem; }
+  .mype-hero-copy p { max-width: 19rem; }
+  .mype-hero-art { min-height: 0; }
+  .mype-point { width: 24px; }
+  .mype-point--phone { left: 3%; top: 9%; }
+  .mype-point--clock { right: 21%; top: 8%; }
+  .mype-point--discount { left: 4%; bottom: 11%; }
+  .mype-point--gift { right: 5%; top: 53%; }
+  .mype-point--location { right: 8%; bottom: 3%; }
+}
+
 @theme {
-  --font-sans: "DM Sans", sans-serif;
+  --font-sans: "Manrope", sans-serif;
+  --font-display: "DM Serif Display", serif;
 
   --color-primary-50: #eff3ff;
   --color-primary-100: #dae2ff;

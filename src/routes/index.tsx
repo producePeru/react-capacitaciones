@@ -8,6 +8,7 @@ const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
 const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
 const InscripcionesSinCooperativa = lazy(() => import("@/pages/ugseco/inscripciones-sin-cooperativa"));
 const AsistenciaPresencialUgseco = lazy(() => import("@/pages/ugseco/asistencia-presencial"));
+const TuEmpresa = lazy(() => import("@/pages/mypes/tu-empresa"));
 
 const CapacitacionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/capacitaciones"));
 const InscripcionesComprasMYPEru = lazy(() => import("@/pages/compras-myperu/inscripciones"));
@@ -22,6 +23,10 @@ export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Inicio />,
+  },
+  {
+    path: "/mypes/tu-empresa",
+    element: <TuEmpresa />,
   },
   {
     path: "/ugseco/capacitaciones",

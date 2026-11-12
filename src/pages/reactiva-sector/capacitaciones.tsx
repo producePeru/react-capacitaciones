@@ -195,7 +195,7 @@ function HeroBanner() {
 
           <h1 className="max-w-3xl text-[28px] font-extrabold leading-[1.15] md:text-[42px]">
             {/* <span className="text-[#000]">Da el siguiente paso en el crecimiento de </span> */}
-            <span className="text-[#e93224]">Reactivar sectores clave como la pesca, el textil y confecciones, la acuicultura y las MYPE</span>
+            <span className="text-[#e93224]">Potencia Tu Empresa - Reactivación Sector Textil confecciones</span>
           </h1>
           <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-[#2f5670] md:text-[17px]">
             Accede a capacitaciones gratuitas. Elige los cursos que mejor se adapten a tus necesidades e impulsa tu desarrollo y el de tu organización.
@@ -207,7 +207,7 @@ function HeroBanner() {
           <img
             src={empresarios}
             alt="Empresarios"
-            className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[280px]"
+            className="m-0 block h-[210px] w-auto max-w-full object-contain object-center p-0 md:h-[260px]"
           />
         </div>
       </div>
