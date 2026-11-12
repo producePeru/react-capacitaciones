@@ -17,6 +17,9 @@ type Store = {
   nombre: string;
   logo?: string | null;
   socials?: Social[] | null;
+  descripcion?: string | null;
+  region?: string | null;
+  provincia?: string | null;
 };
 
 type ApiInscrito = {
@@ -26,6 +29,10 @@ type ApiInscrito = {
   agregar_logo?: string | null;
   logo?: string | null;
   fecha_asistencia?: boolean;
+  socials?: Social[] | null;
+  descripcion?: string | null;
+  region?: string | null;
+  provincia?: string | null;
 };
 
 type ApiResponse = {
@@ -94,6 +101,10 @@ export default function TuEmpresa() {
           id: inscrito.id,
           nombre: inscrito.nombre_comercial || inscrito.razon_social || "Empresa participante",
           logo: inscrito.logo || inscrito.agregar_logo || null,
+          socials: inscrito.socials || [],
+          descripcion: inscrito.descripcion || null,
+          region: inscrito.region || null,
+          provincia: inscrito.provincia || null,
         }));
 
         setStores((currentStores) => [...currentStores, ...newStores]);
@@ -190,7 +201,7 @@ export default function TuEmpresa() {
               <article key={store.id} className="group">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f1ed]">
                   {store.logo ? (
-                    <img src={store.logo} alt={`Logo de ${store.nombre}`} className="h-full w-full object-contain p-4 transition duration-500 group-hover:scale-105" />
+                    <img src={store.logo} alt={`Logo de ${store.nombre}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="grid h-full place-items-center bg-gradient-to-br from-[#f5b335] to-[#e93224] text-5xl font-black text-white">
                       {store.nombre.charAt(0).toUpperCase()}
@@ -201,6 +212,17 @@ export default function TuEmpresa() {
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="text-sm font-bold leading-5 text-[#17212b] sm:text-base" title={store.nombre}>{store.nombre}</h2>
                   </div>
+                  {store.descripcion && (
+                    <p className="mt-2 line-clamp-3 text-xs leading-5 text-black/60" title={store.descripcion}>
+                      {store.descripcion}
+                    </p>
+                  )}
+                  {(store.region || store.provincia) && (
+                    <div className="mt-3 inline-flex items-center rounded-full bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold text-[#d84432] ring-1 ring-[#f8c8bd]">
+                      <span aria-hidden="true" className="mr-1">•</span>
+                      {[store.region, store.provincia].filter(Boolean).join(", ")}
+                    </div>
+                  )}
                   <div className="mt-4 flex items-center gap-2">
                     {store.socials?.filter((social) => social.link).map((social) => (
                       <a key={`${social.name}-${social.link}`} href={social.link} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100" aria-label={`${social.name} de ${store.nombre}`}>
