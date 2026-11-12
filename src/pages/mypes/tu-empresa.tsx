@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import mypesStore from "@/assets/images/mypes-store.png";
 import pointPhone from "@/assets/points/point-1.png";
 import pointClock from "@/assets/points/point-2.png";
 import pointDiscount from "@/assets/points/point-3.png";
 import pointGift from "@/assets/points/point-4.png";
 import pointLocation from "@/assets/points/point-5.png";
+import { httpRequest } from "@/services/api";
 
 type Social = {
   name?: string;
@@ -14,9 +15,29 @@ type Social = {
 type Store = {
   id: number;
   nombre: string;
-  imagen?: string | null;
+  logo?: string | null;
   socials?: Social[] | null;
 };
+
+type ApiInscrito = {
+  id: number;
+  razon_social?: string | null;
+  nombre_comercial?: string | null;
+  agregar_logo?: string | null;
+  logo?: string | null;
+  fecha_asistencia?: boolean;
+};
+
+type ApiResponse = {
+  data?: {
+    data?: ApiInscrito[];
+    current_page?: number;
+    last_page?: number;
+  };
+};
+
+const FERIA_SLUG = "act-8-2026-11-10-f3fmae";
+const PAGE_SIZE = 10;
 
 const socialColors: Record<string, string> = {
   facebook: "bg-[#1877f2]",
@@ -24,45 +45,6 @@ const socialColors: Record<string, string> = {
   tiktok: "bg-[#111827]",
   whatsapp: "bg-[#25d366]",
 };
-
-const mockStores: Store[] = [
-  {
-    id: 1,
-    nombre: "DMadrid Collection",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Instagram", link: "#" }, { name: "Facebook", link: "#" }],
-  },
-  {
-    id: 2,
-    nombre: "Florandi Arte Textil",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Instagram", link: "#" }, { name: "TikTok", link: "#" }],
-  },
-  {
-    id: 3,
-    nombre: "Rousha Perú",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Facebook", link: "#" }, { name: "Instagram", link: "#" }],
-  },
-  {
-    id: 4,
-    nombre: "Sumaqlla Perú",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Instagram", link: "#" }, { name: "WhatsApp", link: "#" }],
-  },
-  {
-    id: 5,
-    nombre: "Casa Andina",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Instagram", link: "#" }],
-  },
-  {
-    id: 6,
-    nombre: "Raíces del Norte",
-    imagen: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85",
-    socials: [{ name: "Facebook", link: "#" }, { name: "WhatsApp", link: "#" }],
-  }
-];
 
 function SocialIcon({ name }: { name: string }) {
   const label = name.toLowerCase();
@@ -78,8 +60,75 @@ function SocialIcon({ name }: { name: string }) {
 }
 
 export default function TuEmpresa() {
-  const [stores] = useState<Store[]>(mockStores);
+  const [stores, setStores] = useState<Store[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef(false);
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(true);
+
+  useEffect(() => {
+    const loadNextPage = async () => {
+      if (loadingRef.current || !hasMoreRef.current) return;
+
+      const nextPage = pageRef.current + 1;
+      loadingRef.current = true;
+      setLoading(true);
+
+      try {
+        const response = await httpRequest<ApiResponse>({
+          method: "GET",
+          url: `event-pnte-public/inscritos-feria-page/${FERIA_SLUG}`,
+          params: {
+            page: nextPage,
+            pageSize: PAGE_SIZE,
+          },
+        });
+
+        const inscritos = (response.data?.data ?? []).filter(
+          (inscrito) => inscrito.fecha_asistencia === true,
+        );
+        const newStores = inscritos.map((inscrito) => ({
+          id: inscrito.id,
+          nombre: inscrito.nombre_comercial || inscrito.razon_social || "Empresa participante",
+          logo: inscrito.logo || inscrito.agregar_logo || null,
+        }));
+
+        setStores((currentStores) => [...currentStores, ...newStores]);
+        pageRef.current = nextPage;
+
+        const lastPage = response.data?.last_page ?? nextPage;
+        hasMoreRef.current = nextPage < lastPage;
+        setHasMore(hasMoreRef.current);
+      } catch (error) {
+        console.error("No se pudieron cargar las empresas de la feria:", error);
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
+      }
+    };
+
+    loadNextPage();
+
+    let observer: IntersectionObserver | null = null;
+
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) loadNextPage();
+        },
+        { rootMargin: "0px 0px 320px" },
+      );
+
+      if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      observer?.disconnect();
+    };
+  }, []);
 
   const visibleStores = stores.filter((store) =>
     store.nombre.toLowerCase().includes(search.trim().toLowerCase()),
@@ -128,7 +177,7 @@ export default function TuEmpresa() {
           </label>
         </div>
 
-        {visibleStores.length === 0 && (
+        {visibleStores.length === 0 && !loading && (
           <div className="py-20 text-center">
             <p className="text-lg font-bold text-[#12253f]">No encontramos esa marca.</p>
             <p className="mt-2 text-sm text-slate-500">Prueba con otro nombre.</p>
@@ -140,8 +189,8 @@ export default function TuEmpresa() {
             {visibleStores.map((store) => (
               <article key={store.id} className="group">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f1ed]">
-                  {store.imagen ? (
-                    <img src={store.imagen} alt={`Logo de ${store.nombre}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  {store.logo ? (
+                    <img src={store.logo} alt={`Logo de ${store.nombre}`} className="h-full w-full object-contain p-4 transition duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="grid h-full place-items-center bg-gradient-to-br from-[#f5b335] to-[#e93224] text-5xl font-black text-white">
                       {store.nombre.charAt(0).toUpperCase()}
@@ -164,6 +213,11 @@ export default function TuEmpresa() {
             ))}
           </div>
         )}
+
+        <div ref={loadMoreRef} className="py-8 text-center text-sm text-black/50">
+          {loading && "Cargando más empresas..."}
+          {!loading && !hasMore && visibleStores.length > 0 && "No hay más empresas."}
+        </div>
       </section>
     </main>
   );
