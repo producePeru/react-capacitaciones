@@ -56,6 +56,7 @@ const socialPlatforms: Record<string, { domains: string[]; label: string; color:
   twitter: { domains: ["twitter.com", "x.com"], label: "t", color: "bg-[#1d9bf0]" },
   linkedin: { domains: ["linkedin.com"], label: "in", color: "bg-[#0a66c2]" },
   youtube: { domains: ["youtube.com", "youtu.be"], label: "▶", color: "bg-[#e11d2f]" },
+  web: { domains: [], label: "w", color: "bg-[#171717]" },
 };
 
 type ResolvedSocial = {
@@ -64,6 +65,7 @@ type ResolvedSocial = {
   href: string;
   label: string;
   color: string;
+  platform: string;
 };
 
 function getSocialPlatformByName(name: string) {
@@ -118,11 +120,10 @@ function resolveSocials(socials?: Social[] | null): ResolvedSocial[] {
     const namePlatform = getSocialPlatformByName(social.name ?? "");
     const hostPlatform = getSocialPlatformByHost(host);
 
-    if (!namePlatform && !hostPlatform) return;
-    if (namePlatform && hostPlatform && namePlatform !== hostPlatform) return;
+    if (namePlatform && hostPlatform && namePlatform !== hostPlatform && namePlatform !== "web") return;
     if (seenPlatforms.has(namePlatform ?? hostPlatform ?? "")) return;
 
-    const platform = namePlatform ?? hostPlatform ?? "";
+    const platform = namePlatform ?? hostPlatform ?? "web";
     seenPlatforms.add(platform);
 
     const normalizedName = (social.name ?? "").toLowerCase().trim();
@@ -130,23 +131,31 @@ function resolveSocials(socials?: Social[] | null): ResolvedSocial[] {
 
     resolved.push({
       key: `${platform}-${href}`,
-      name: social.name ?? platform,
+      name: social.name ?? (platform === "web" ? "Web" : platform),
       href,
       label,
       color: socialPlatforms[platform].color,
+      platform,
     });
   });
 
   return resolved;
 }
 
-function SocialIcon({ label, color }: { label: string; color: string }) {
+function SocialIcon({ label, color, platform }: { label: string; color: string; platform: string }) {
   return (
     <span
       aria-hidden="true"
       className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-sm ${color}`}
     >
-      {label}
+      {platform === "web" ? (
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+        </svg>
+      ) : (
+        label
+      )}
     </span>
   );
 }
@@ -407,7 +416,7 @@ export default function TuEmpresa() {
                   <div className="mt-auto flex items-center gap-2 pt-4">
                     {resolveSocials(store.socials).map((social) => (
                       <a key={social.key} href={social.href} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100" aria-label={`${social.name} de ${store.nombre}`}>
-                        <SocialIcon label={social.label} color={social.color} />
+                        <SocialIcon label={social.label} color={social.color} platform={social.platform} />
                       </a>
                     ))}
                   </div>
@@ -487,7 +496,7 @@ export default function TuEmpresa() {
                       className="opacity-70 transition hover:opacity-100"
                       aria-label={`${social.name} de ${selectedStore.nombre}`}
                     >
-                      <SocialIcon label={social.label} color={social.color} />
+                      <SocialIcon label={social.label} color={social.color} platform={social.platform} />
                     </a>
                   ))}
                 </div>
