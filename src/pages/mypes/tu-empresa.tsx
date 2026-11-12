@@ -48,22 +48,105 @@ type ApiResponse = {
 const FERIA_SLUG = "act-8-2026-11-10-f3fmae";
 const PAGE_SIZE = 10;
 
-const socialColors: Record<string, string> = {
-  facebook: "bg-[#1877f2]",
-  instagram: "bg-[#d62976]",
-  tiktok: "bg-[#111827]",
-  whatsapp: "bg-[#25d366]",
+const socialPlatforms: Record<string, { domains: string[]; label: string; color: string }> = {
+  facebook: { domains: ["facebook.com", "fb.com", "fb.me"], label: "f", color: "bg-[#1877f2]" },
+  instagram: { domains: ["instagram.com"], label: "◎", color: "bg-[#d62976]" },
+  tiktok: { domains: ["tiktok.com"], label: "♪", color: "bg-[#111827]" },
+  whatsapp: { domains: ["whatsapp.com", "wa.me"], label: "wa", color: "bg-[#25d366]" },
+  twitter: { domains: ["twitter.com", "x.com"], label: "t", color: "bg-[#1d9bf0]" },
+  linkedin: { domains: ["linkedin.com"], label: "in", color: "bg-[#0a66c2]" },
+  youtube: { domains: ["youtube.com", "youtu.be"], label: "▶", color: "bg-[#e11d2f]" },
 };
 
-function SocialIcon({ name }: { name: string }) {
-  const label = name.toLowerCase();
+type ResolvedSocial = {
+  key: string;
+  name: string;
+  href: string;
+  label: string;
+  color: string;
+};
 
+function getSocialPlatformByName(name: string) {
+  const normalized = name.toLowerCase().trim();
+
+  if (!normalized) return null;
+  if (normalized === "x") return "twitter";
+
+  return Object.keys(socialPlatforms).find((platform) => normalized.includes(platform)) ?? null;
+}
+
+function getSocialPlatformByHost(host: string) {
+  return (
+    Object.keys(socialPlatforms).find((platform) =>
+      socialPlatforms[platform].domains.some((domain) => host === domain || host.endsWith(`.${domain}`)),
+    ) ?? null
+  );
+}
+
+function resolveSocials(socials?: Social[] | null): ResolvedSocial[] {
+  if (!socials?.length) return [];
+
+  const resolved: ResolvedSocial[] = [];
+  const seenPlatforms = new Set<string>();
+
+  socials.forEach((social) => {
+    const rawLink = (social.link ?? "").toString().trim();
+    if (!rawLink) return;
+
+    let href = rawLink;
+    let parsedUrl: URL | null = null;
+
+    try {
+      parsedUrl = new URL(href);
+    } catch {
+      if (rawLink.includes(" ") || !rawLink.includes(".")) return;
+
+      try {
+        parsedUrl = new URL(`https://${rawLink}`);
+        href = parsedUrl.toString();
+      } catch {
+        return;
+      }
+    }
+
+    if (!parsedUrl) return;
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") return;
+
+    const host = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+    if (!host.includes(".")) return;
+
+    const namePlatform = getSocialPlatformByName(social.name ?? "");
+    const hostPlatform = getSocialPlatformByHost(host);
+
+    if (!namePlatform && !hostPlatform) return;
+    if (namePlatform && hostPlatform && namePlatform !== hostPlatform) return;
+    if (seenPlatforms.has(namePlatform ?? hostPlatform ?? "")) return;
+
+    const platform = namePlatform ?? hostPlatform ?? "";
+    seenPlatforms.add(platform);
+
+    const normalizedName = (social.name ?? "").toLowerCase().trim();
+    const label = platform === "twitter" && normalizedName === "x" ? "x" : socialPlatforms[platform].label;
+
+    resolved.push({
+      key: `${platform}-${href}`,
+      name: social.name ?? platform,
+      href,
+      label,
+      color: socialPlatforms[platform].color,
+    });
+  });
+
+  return resolved;
+}
+
+function SocialIcon({ label, color }: { label: string; color: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-sm ${socialColors[label] ?? "bg-slate-500"}`}
+      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-sm ${color}`}
     >
-      {label === "facebook" ? "f" : label === "instagram" ? "◎" : label === "whatsapp" ? "wa" : "♪"}
+      {label}
     </span>
   );
 }
@@ -322,9 +405,9 @@ export default function TuEmpresa() {
                     </div>
                   )}
                   <div className="mt-auto flex items-center gap-2 pt-4">
-                    {store.socials?.filter((social) => social.link).map((social) => (
-                      <a key={`${social.name}-${social.link}`} href={social.link} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100" aria-label={`${social.name} de ${store.nombre}`}>
-                        <SocialIcon name={social.name ?? "red social"} />
+                    {resolveSocials(store.socials).map((social) => (
+                      <a key={social.key} href={social.href} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100" aria-label={`${social.name} de ${store.nombre}`}>
+                        <SocialIcon label={social.label} color={social.color} />
                       </a>
                     ))}
                   </div>
@@ -393,22 +476,20 @@ export default function TuEmpresa() {
                 {selectedStore.descripcion}
               </p>
 
-              {selectedStore.socials?.filter((social) => social.link).length ? (
+              {resolveSocials(selectedStore.socials).length ? (
                 <div className="mt-6 flex items-center gap-2 border-t border-black/10 pt-5">
-                  {selectedStore.socials
-                    ?.filter((social) => social.link)
-                    .map((social) => (
-                      <a
-                        key={`${social.name}-${social.link}`}
-                        href={social.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="opacity-70 transition hover:opacity-100"
-                        aria-label={`${social.name} de ${selectedStore.nombre}`}
-                      >
-                        <SocialIcon name={social.name ?? "red social"} />
-                      </a>
-                    ))}
+                  {resolveSocials(selectedStore.socials).map((social) => (
+                    <a
+                      key={social.key}
+                      href={social.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="opacity-70 transition hover:opacity-100"
+                      aria-label={`${social.name} de ${selectedStore.nombre}`}
+                    >
+                      <SocialIcon label={social.label} color={social.color} />
+                    </a>
+                  ))}
                 </div>
               ) : null}
 
