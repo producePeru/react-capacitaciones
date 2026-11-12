@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import mypesStore from "@/assets/images/mypes-store.png";
+import mypesStore from "@/assets/images/mypes-store.jpeg";
 import pointPhone from "@/assets/points/point-1.png";
 import pointClock from "@/assets/points/point-2.png";
 import pointDiscount from "@/assets/points/point-3.png";
@@ -66,11 +66,55 @@ function SocialIcon({ name }: { name: string }) {
   );
 }
 
+function StoreDescription({ description, onOpen }: { description: string; onOpen: () => void }) {
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useEffect(() => {
+    const element = descriptionRef.current;
+    if (!element) return;
+
+    setIsTruncated(element.scrollHeight > element.clientHeight + 1);
+  }, [description]);
+
+  return (
+    <div>
+      <p ref={descriptionRef} className="mt-2 line-clamp-3 text-xs leading-5 text-black/60">
+        {description}
+      </p>
+      {isTruncated && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="group inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#d84432]"
+          >
+            <span className="border-b border-[#f3b7aa] pb-0.5 transition group-hover:border-[#d84432]">Leer más</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2 8h11M9 4l4 4-4 4" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TuEmpresa() {
   const [stores, setStores] = useState<Store[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef(false);
   const pageRef = useRef(0);
@@ -145,6 +189,23 @@ export default function TuEmpresa() {
     store.nombre.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
+  useEffect(() => {
+    if (!selectedStore) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedStore(null);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedStore]);
+
   return (
     <main className="min-h-screen bg-white text-[#171717]">
       <section className="w-full bg-[#f3f1ed]">
@@ -161,11 +222,11 @@ export default function TuEmpresa() {
             </a>
           </div>
           <div className="mype-hero-art relative flex aspect-[3/2] h-fit self-end items-end overflow-visible bg-[#f3f1ed]">
-            <img src={pointPhone} alt="" aria-hidden="true" className="mype-point mype-point--phone" />
+            {/* <img src={pointPhone} alt="" aria-hidden="true" className="mype-point mype-point--phone" />
             <img src={pointClock} alt="" aria-hidden="true" className="mype-point mype-point--clock" />
             <img src={pointDiscount} alt="" aria-hidden="true" className="mype-point mype-point--discount" />
             <img src={pointGift} alt="" aria-hidden="true" className="mype-point mype-point--gift" />
-            <img src={pointLocation} alt="" aria-hidden="true" className="mype-point mype-point--location" />
+            <img src={pointLocation} alt="" aria-hidden="true" className="mype-point mype-point--location" /> */}
             <img src={mypesStore} alt="Emprendedores peruanos" className="absolute inset-0 block h-full w-full object-contain" />
           </div>
         </div>
@@ -198,7 +259,7 @@ export default function TuEmpresa() {
         {visibleStores.length > 0 && (
           <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 sm:gap-y-12 lg:grid-cols-4">
             {visibleStores.map((store) => (
-              <article key={store.id} className="group">
+              <article key={store.id} className="group flex h-full flex-col">
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f1ed]">
                   {store.logo ? (
                     <img src={store.logo} alt={`Logo de ${store.nombre}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
@@ -208,22 +269,20 @@ export default function TuEmpresa() {
                     </div>
                   )}
                 </div>
-                <div className="border-b border-[#17212b]/15 py-4">
+                <div className="flex flex-1 flex-col border-b border-[#17212b]/15 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="text-sm font-bold leading-5 text-[#17212b] sm:text-base" title={store.nombre}>{store.nombre}</h2>
                   </div>
                   {store.descripcion && (
-                    <p className="mt-2 line-clamp-3 text-xs leading-5 text-black/60" title={store.descripcion}>
-                      {store.descripcion}
-                    </p>
+                    <StoreDescription description={store.descripcion} onOpen={() => setSelectedStore(store)} />
                   )}
                   {(store.region || store.provincia) && (
-                    <div className="mt-3 inline-flex items-center rounded-full bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold text-[#d84432] ring-1 ring-[#f8c8bd]">
+                    <div className="mt-3 inline-flex w-fit items-center rounded-full bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold text-[#d84432] ring-1 ring-[#f8c8bd]">
                       <span aria-hidden="true" className="mr-1">•</span>
                       {[store.region, store.provincia].filter(Boolean).join(", ")}
                     </div>
                   )}
-                  <div className="mt-4 flex items-center gap-2">
+                  <div className="mt-auto flex items-center gap-2 pt-4">
                     {store.socials?.filter((social) => social.link).map((social) => (
                       <a key={`${social.name}-${social.link}`} href={social.link} target="_blank" rel="noreferrer" className="opacity-65 transition hover:opacity-100" aria-label={`${social.name} de ${store.nombre}`}>
                         <SocialIcon name={social.name ?? "red social"} />
@@ -241,6 +300,85 @@ export default function TuEmpresa() {
           {!loading && !hasMore && visibleStores.length > 0 && "No hay más empresas."}
         </div>
       </section>
+
+      {selectedStore && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mype-modal-title"
+          onClick={() => setSelectedStore(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative aspect-[16/7] overflow-hidden bg-white">
+              {selectedStore.logo ? (
+                <img
+                  src={selectedStore.logo}
+                  alt={`Logo de ${selectedStore.nombre}`}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <div className="grid h-full place-items-center bg-gradient-to-br from-[#f5b335] to-[#e93224] text-6xl font-black text-white">
+                  {selectedStore.nombre.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setSelectedStore(null)}
+                aria-label="Cerrar"
+                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-lg leading-none text-[#17212b] shadow-sm transition hover:bg-white"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-5 sm:px-8 sm:py-6">
+              <h2 id="mype-modal-title" className="font-display text-2xl leading-tight text-[#17212b]">
+                {selectedStore.nombre}
+              </h2>
+              {(selectedStore.region || selectedStore.provincia) && (
+                <div className="mt-3 inline-flex items-center rounded-full bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold text-[#d84432] ring-1 ring-[#f8c8bd]">
+                  <span aria-hidden="true" className="mr-1">•</span>
+                  {[selectedStore.region, selectedStore.provincia].filter(Boolean).join(", ")}
+                </div>
+              )}
+              <p className="mt-4 whitespace-pre-line text-sm leading-6 text-black/70">
+                {selectedStore.descripcion}
+              </p>
+
+              {selectedStore.socials?.filter((social) => social.link).length ? (
+                <div className="mt-6 flex items-center gap-2 border-t border-black/10 pt-5">
+                  {selectedStore.socials
+                    ?.filter((social) => social.link)
+                    .map((social) => (
+                      <a
+                        key={`${social.name}-${social.link}`}
+                        href={social.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="opacity-70 transition hover:opacity-100"
+                        aria-label={`${social.name} de ${selectedStore.nombre}`}
+                      >
+                        <SocialIcon name={social.name ?? "red social"} />
+                      </a>
+                    ))}
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => setSelectedStore(null)}
+                className="mt-6 w-full bg-[#171717] px-6 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#e93224]"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
