@@ -413,8 +413,8 @@ function UnavailablePanel({
   }
 
   const registrationUrl = slug
-    ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`
-    : "/ugseco/inscripciones";
+    ? `/compras-myperu/inscripciones?slug=${encodeURIComponent(slug)}`
+    : "/compras-myperu/inscripciones";
   const actionUrl = estado === "finalizado" ? "/compras-myperu" : registrationUrl;
   const actionLabel =
     estado === "finalizado"
@@ -459,7 +459,7 @@ function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
         : "No se indicó la capacitación. Vuelva a seleccionarla desde el listado."}
       <div className="mt-4">
         <Link
-          to="/ugseco/capacitaciones"
+          to="/compras-myperu/capacitaciones"
           className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
         >
           Ver capacitaciones
@@ -517,7 +517,7 @@ export default function ComprasMyperuPruebaSalida() {
     if (!redirecting || !slug) return;
 
     const timer = window.setTimeout(() => {
-      navigate(`/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`);
+      navigate(`/compras-myperu/inscripciones?slug=${encodeURIComponent(slug)}`);
     }, 1800);
 
     return () => window.clearTimeout(timer);

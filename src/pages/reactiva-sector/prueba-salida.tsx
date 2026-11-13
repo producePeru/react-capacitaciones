@@ -413,9 +413,9 @@ function UnavailablePanel({
   }
 
   const registrationUrl = slug
-    ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`
-    : "/ugseco/inscripciones";
-  const actionUrl = estado === "finalizado" ? "/ugseco/capacitaciones" : registrationUrl;
+    ? `/reactiva-sector/inscripciones?slug=${encodeURIComponent(slug)}`
+    : "/reactiva-sector/inscripciones";
+  const actionUrl = estado === "finalizado" ? "/reactiva-sector/capacitaciones" : registrationUrl;
   const actionLabel =
     estado === "finalizado"
       ? "Ver otras capacitaciones"
@@ -459,7 +459,7 @@ function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
         : "No se indicó la capacitación. Vuelva a seleccionarla desde el listado."}
       <div className="mt-4">
         <Link
-          to="/ugseco/capacitaciones"
+          to="/reactiva-sector/capacitaciones"
           className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
         >
           Ver capacitaciones
@@ -517,7 +517,7 @@ export default function ComprasMyperuPruebaSalida() {
     if (!redirecting || !slug) return;
 
     const timer = window.setTimeout(() => {
-      navigate(`/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`);
+      navigate(`/reactiva-sector/inscripciones?slug=${encodeURIComponent(slug)}`);
     }, 1800);
 
     return () => window.clearTimeout(timer);
