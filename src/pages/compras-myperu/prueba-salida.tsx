@@ -415,7 +415,7 @@ function UnavailablePanel({
   const registrationUrl = slug
     ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`
     : "/ugseco/inscripciones";
-  const actionUrl = estado === "finalizado" ? "/ugseco/capacitaciones" : registrationUrl;
+  const actionUrl = estado === "finalizado" ? "/compras-myperu" : registrationUrl;
   const actionLabel =
     estado === "finalizado"
       ? "Ver otras capacitaciones"
