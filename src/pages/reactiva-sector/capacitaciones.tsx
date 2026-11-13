@@ -24,12 +24,12 @@ type ApiResponse = {
 
 let cursosRequest: Promise<ApiCourse[]> | null = null;
 
-function loadCursosCooperativasUgseco() {
+function loadCursosReactivaSectores() {
   if (cursosRequest) return cursosRequest;
 
   const request = httpRequest<ApiResponse>({
     method: "GET",
-    url: "event-pnte-public/cursos-compras-myperu",
+    url: "event-pnte-public/calendar-reactiva-sectores-public",
   }).then((response) => response.data ?? []);
 
   cursosRequest = request;
@@ -317,7 +317,7 @@ export default function CoursesTemplate() {
   useEffect(() => {
     let active = true;
 
-    loadCursosCooperativasUgseco()
+    loadCursosReactivaSectores()
       .then((data) => {
         if (active) {
           setCourses(
