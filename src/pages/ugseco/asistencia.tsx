@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
-import cooperativaMype from "@/assets/images/cooperativa-mype.png";
+import cooperativaMype from "@/assets/images/asistencia.png";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input, type InputProps } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -306,7 +306,7 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
       <div className="relative px-8 py-8 md:px-14 md:py-12">
         <h1 className="mb-2 max-w-3xl text-[16px] leading-[1.15] md:text-[16px]">
           <span className="text-[#124e78]">
-            Capacitaciones a las cooperativas
+            Asistencia
           </span>
         </h1>
 

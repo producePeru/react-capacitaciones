@@ -1211,7 +1211,7 @@ function RegistrationStepper({
 
   const handleCloseSuccess = () => {
     setSuccessOpen(false);
-    navigate("/compras-myperu");
+    navigate("/reactiva-sector");
   };
 
   const handleRegister = async () => {
@@ -1270,6 +1270,7 @@ function RegistrationStepper({
         params: {
           slug,
           correo: participanteValues.correo,
+          pagina: 'reactiva-sector',
           nombres: [
             participanteValues.nombres,
             participanteValues.apellidoPaterno,
