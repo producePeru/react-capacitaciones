@@ -1270,6 +1270,7 @@ function RegistrationStepper({
         params: {
           slug,
           correo: participanteValues.correo,
+          pagina: 'compras-myperu',
           nombres: [
             participanteValues.nombres,
             participanteValues.apellidoPaterno,

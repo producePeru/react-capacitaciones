@@ -503,9 +503,11 @@ function WelcomePanel({
 function UnavailablePanel({
   course,
   slug,
+  pagina,
 }: {
   course: CourseDetail;
   slug: string | null;
+  pagina: string | null;
 }) {
   const fechas = course.fechas ?? [];
   const primeraFecha = fechas[0] ?? null;
@@ -540,10 +542,36 @@ function UnavailablePanel({
     ? `/ugseco/inscripciones?slug=${encodeURIComponent(slug)}`
     : "/ugseco/inscripciones";
   const actionUrl = estado === "finalizado" ? "/ugseco/capacitaciones" : registrationUrl;
+  const paginaRegistrationPath =
+    pagina === "reactiva-sector"
+      ? "/reactiva-sector/inscripciones"
+      : pagina === "compras-myperu"
+        ? "/compras-myperu/inscripciones"
+        : null;
+  const paginaRegistrationUrl = (() => {
+    if (!paginaRegistrationPath) return null;
+
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+    const baseUrl = isLocal
+      ? "http://localhost:5174"
+      : (import.meta.env.VITE_APP_FRONTEND_URL as string | undefined) ||
+        window.location.origin;
+
+    const registrationUrl = new URL(
+      `${baseUrl.replace(/\/$/, "")}${paginaRegistrationPath}`
+    );
+    if (slug) registrationUrl.searchParams.set("slug", slug);
+
+    return registrationUrl.toString();
+  })();
   const actionLabel =
     estado === "finalizado"
       ? "Ver otras capacitaciones"
       : "Ir al formulario de inscripción";
+  const actionButtonClassName =
+    "mt-3 inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-8 py-3 text-[14px] font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#20708a]";
 
   return (
     <div className="rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 md:p-8">
@@ -565,29 +593,69 @@ function UnavailablePanel({
 
       <p className="mt-6 text-[13px] text-[#3e647d]">{mensajeEnlace}</p>
 
-      <Link
-        to={actionUrl}
-        className="mt-3 inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-8 py-3 text-[14px] font-bold tracking-[0.12em] text-white transition-colors hover:bg-[#20708a]"
-      >
-        {actionLabel}
-      </Link>
+      {paginaRegistrationUrl ? (
+        <a
+          href={paginaRegistrationUrl}
+          className={actionButtonClassName}
+        >
+          {actionLabel}
+        </a>
+      ) : (
+        <Link
+          to={actionUrl}
+          className={actionButtonClassName}
+        >
+          {actionLabel}
+        </Link>
+      )}
     </div>
   );
 }
 
-function LoadErrorPanel({ hasSlug }: { hasSlug: boolean }) {
+function LoadErrorPanel({
+  hasSlug,
+  pagina,
+}: {
+  hasSlug: boolean;
+  pagina: string | null;
+}) {
+  const paginaCoursesPath =
+    pagina === "reactiva-sector"
+      ? "/reactiva-sector"
+      : pagina === "compras-myperu"
+        ? "/compras-myperu"
+        : null;
+  const paginaCoursesUrl = paginaCoursesPath
+    ? `${(
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+          ? "http://localhost:5174"
+          : (import.meta.env.VITE_APP_FRONTEND_URL as string | undefined) ||
+            window.location.origin
+      ).replace(/\/$/, "")}${paginaCoursesPath}`
+    : null;
+
   return (
     <div className="rounded-xl border border-input-error/30 bg-input-error/5 p-6 text-sm text-input-error">
       {hasSlug
         ? "No se pudo cargar la información de la capacitación. Vuelva a seleccionarla desde el listado."
         : "No se indicó la capacitación. Vuelva a seleccionarla desde el listado."}
       <div className="mt-4">
-        <Link
-          to="/ugseco/capacitaciones"
-          className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
-        >
-          Ver capacitaciones
-        </Link>
+        {paginaCoursesUrl ? (
+          <a
+            href={paginaCoursesUrl}
+            className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
+          >
+            Ver capacitaciones
+          </a>
+        ) : (
+          <Link
+            to="/ugseco/capacitaciones"
+            className="inline-flex items-center justify-center rounded-md bg-[#2b8aa8] px-6 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#20708a]"
+          >
+            Ver capacitaciones
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -607,6 +675,7 @@ export default function Asistencia() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const slug = searchParams.get("slug");
+  const pagina = searchParams.get("pagina");
   const [loadedCourse, setLoadedCourse] = useState<{
     slug: string;
     course: CourseDetail | null;
@@ -810,9 +879,9 @@ export default function Asistencia() {
             {enrollment ? (
               <WelcomePanel enrollment={enrollment} course={course} />
             ) : !course ? (
-              <LoadErrorPanel hasSlug={Boolean(slug)} />
+              <LoadErrorPanel hasSlug={Boolean(slug)} pagina={pagina} />
             ) : course.estado && course.estado !== "disponible" ? (
-              <UnavailablePanel course={course} slug={slug} />
+              <UnavailablePanel course={course} slug={slug} pagina={pagina} />
             ) : (
               <form
                 noValidate
