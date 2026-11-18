@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
 import comprasMyperuIcon from "@/assets/icons/compras-myperu.ico";
 import bannerImg from "@/assets/images/compras-myperu.png";
 import { Button } from "@/components/tailgrids/core/button";
@@ -429,6 +430,7 @@ type EmpresarioLookupResponse = {
     celular?: string | null;
     correo_electronico?: string | null;
     pais_id?: number | null;
+    fecha_nacimiento?: string | null;
   };
 };
 
@@ -828,6 +830,7 @@ function StepParticipante({
       );
       setCelular((data.celular ?? "").replace(/\D/g, "").slice(0, 9));
       setCorreo((data.correo_electronico ?? "").trim());
+      setFechaNacimiento(data.fecha_nacimiento ?? "");
 
       if (!isDni && data.pais_id != null) {
         setCountry(String(data.pais_id));
@@ -1282,8 +1285,18 @@ function RegistrationStepper({
       }).catch(() => undefined);
 
       setSuccessOpen(true);
-    } catch {
-      setSubmitError("No se pudo completar el registro. Intente nuevamente.");
+    } catch (error: unknown) {
+      const backendMessage = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      const mensajeYaInscrito = backendMessage &&
+        /ya\s+(?:est[aá]s|est[aá])\s+(?:registrad[oa]|inscrit[oa])|participante ya est[aá] registrado/i.test(backendMessage);
+
+      setSubmitError(
+        mensajeYaInscrito
+          ? "Ya estás inscrito en esta fecha de la actividad."
+          : backendMessage ?? "No se pudo completar el registro. Intente nuevamente."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -1337,9 +1350,47 @@ function RegistrationStepper({
         )}
       </div>
       {submitError && (
-        <p className="mt-3 text-right text-xs text-input-error">
-          {submitError}
-        </p>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="registro-error-title"
+          aria-describedby="registro-error-message"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl md:p-8">
+            <div className="flex flex-col items-center text-center">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-[#2b8aa8]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-7 w-7"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4m0 4h.01" />
+                </svg>
+              </span>
+              <h2 id="registro-error-title" className="mt-4 text-xl font-bold text-[#124e78]">
+                No se pudo completar el registro
+              </h2>
+              <p id="registro-error-message" className="mt-2 text-sm leading-relaxed text-[#3e647d]">
+                {submitError}
+              </p>
+              <button
+                type="button"
+                onClick={() => setSubmitError(null)}
+                className="mt-6 rounded-lg bg-[#2b8aa8] px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#20708a]"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {successOpen && (
