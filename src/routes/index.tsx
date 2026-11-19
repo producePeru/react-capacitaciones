@@ -18,6 +18,7 @@ const CapacitacionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/
 const InscripcionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/inscripciones"));
 import ReactivaPruebaSalida from "@/pages/reactiva-sector/prueba-salida";
 
+import RegistroGeneral from "@/pages/inscripciones/registro";
 
 export const routes: RouteObject[] = [
 
@@ -80,6 +81,12 @@ export const routes: RouteObject[] = [
   {
     path: "/reactiva-sector/prueba-salida",
     element: <ReactivaPruebaSalida />,
+  },
+
+
+  {
+    path: "/registro",
+    element: <RegistroGeneral />,
   },
 
   {
