@@ -16,6 +16,7 @@ import ComprasMyperuPruebaSalida from "@/pages/compras-myperu/prueba-salida";
 
 const CapacitacionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/capacitaciones"));
 const InscripcionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/inscripciones"));
+import ReactivaPruebaSalida from "@/pages/reactiva-sector/prueba-salida";
 
 
 export const routes: RouteObject[] = [
@@ -75,6 +76,10 @@ export const routes: RouteObject[] = [
   {
     path: "/reactiva-sector/inscripciones",
     element: <InscripcionesReactivaSector />,
+  },
+  {
+    path: "/reactiva-sector/prueba-salida",
+    element: <ReactivaPruebaSalida />,
   },
 
   {

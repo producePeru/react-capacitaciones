@@ -298,6 +298,10 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
     <div className="grid bg-[#f7fdff] md:grid-cols-[1fr_380px]">
       <div className="relative px-8 py-8 md:px-14 md:py-12">
 
+        <span className="inline-flex rounded-full bg-[#e0f3f8] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#2b8aa8] mb-3">
+          Prueba de salida
+        </span>
+
         <h2 className="max-w-3xl text-[24px] font-extrabold leading-[1.15] md:text-[30px]">
           <span className="text-[#2b8aa8]">
             {course?.tema ?? "En el crecimiento de tu empresa"}
@@ -313,14 +317,14 @@ function HeroBanner({ course }: { course: CourseDetail | null }) {
             <span className="font-semibold text-[#124e78]">Fecha: </span>
             <span className="text-[#3e647d]">{formatFechaLarga(fecha)}</span>
           </p>
-          <p className="flex items-center gap-2">
+          {/* <p className="flex items-center gap-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
             <span className="font-semibold text-[#124e78]">Hora: </span>
             <span className="text-[#3e647d]">{formatHora(course?.horario)}</span>
-          </p>
+          </p> */}
 
           {!esVirtual && course?.direccion && (
             <p className="flex items-start gap-2">
