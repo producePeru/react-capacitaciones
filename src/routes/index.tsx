@@ -3,6 +3,7 @@ import { lazy } from "react";
 
 const Inicio = lazy(() => import("@/pages/index/inicio"));
 const Asistencia = lazy(() => import("@/pages/ugseco/asistencia"));
+const AsistenciaGeneral = lazy(() => import("@/pages/asistencias/asistencia-general"));
 const CoursesTemplate = lazy(() => import("@/pages/ugseco/capacitaciones"));
 const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
 const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
@@ -19,7 +20,6 @@ const InscripcionesReactivaSector = lazy(() => import("@/pages/reactiva-sector/i
 import ReactivaPruebaSalida from "@/pages/reactiva-sector/prueba-salida";
 
 import RegistroGeneral from "@/pages/inscripciones/registro";
-import AsistenciaGeneral from "@/pages/asistencias/asistencia-general";
 
 export const routes: RouteObject[] = [
 
