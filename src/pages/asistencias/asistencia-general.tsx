@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
+import axios from "axios";
 import { Button } from "@/components/tailgrids/core/button";
 import { Input } from "@/components/tailgrids/core/input";
 import { Label } from "@/components/tailgrids/core/label";
@@ -160,15 +161,19 @@ export default function AsistenciaGeneral() {
         nombre: response.data?.nombre,
         fecha: response.data?.fecha_asistencia_marcada ?? response.data?.fecha_asistencia,
       });
-    } catch (error) {
-      const message = error?.response?.data?.message;
-      if (error?.response?.data?.reason === "date_without_event") {
+    } catch (error: unknown) {
+      const errorData = axios.isAxiosError<{ message?: string; reason?: string }>(error)
+        ? error.response?.data
+        : undefined;
+      const message = errorData?.message;
+
+      if (errorData?.reason === "date_without_event") {
         setResult({
           type: "date-unavailable",
           message: message ?? "Hoy no hay una capacitación programada, por lo que no se tomará asistencia.",
           registrationUrl: getRegistrationUrl(),
         });
-      } else if (error?.response?.status === 404) {
+      } else if (axios.isAxiosError(error) && error.response?.status === 404) {
         setResult({
           type: "not-found",
           message: message ?? "No se encontró una inscripción para esos datos.",
