@@ -1884,12 +1884,12 @@ export default function Inscripciones() {
           <p className="mt-2 text-sm leading-relaxed text-[#3e647d]">
             {formUnavailableMessage}
           </p>
-          <a
+          {/* <a
             href="/compras-myperu"
             className="mt-6 inline-flex rounded-lg bg-[#2b8aa8] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#20708a]"
           >
             Ver capacitaciones disponibles
-          </a>
+          </a> */}
         </section>
       </div>
     );

@@ -199,6 +199,17 @@ function ScheduleList({
 }) {
   const hora = formatHora(horario);
   const items: (string | null)[] = fechas.length ? fechas : [null];
+  const horaPorFecha = (fecha: string | null) => {
+    if (!fecha || !Array.isArray(horario)) return hora;
+
+    const sesionesDeFecha = horario.filter((sesion) => {
+      if (!sesion || typeof sesion !== "object") return false;
+      const fechaSesion = (sesion as { fecha?: unknown }).fecha;
+      return typeof fechaSesion === "string" && fechaSesion.slice(0, 10) === fecha;
+    });
+
+    return formatHora(sesionesDeFecha.length ? sesionesDeFecha : horario);
+  };
 
   return (
     <div className="mt-5">
@@ -228,7 +239,7 @@ function ScheduleList({
             <span className="font-semibold text-[#124e78]">
               {formatFechaLarga(fecha)}
             </span>
-            <span>{hora}</span>
+            <span>{horaPorFecha(fecha)}</span>
           </li>
         ))}
       </ul>

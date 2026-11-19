@@ -199,6 +199,17 @@ function ScheduleList({
 }) {
   const hora = formatHora(horario);
   const items: (string | null)[] = fechas.length ? fechas : [null];
+  const horaPorFecha = (fecha: string | null) => {
+    if (!fecha || !Array.isArray(horario)) return hora;
+
+    const sesionesDeFecha = horario.filter((sesion) => {
+      if (!sesion || typeof sesion !== "object") return false;
+      const fechaSesion = (sesion as { fecha?: unknown }).fecha;
+      return typeof fechaSesion === "string" && fechaSesion.slice(0, 10) === fecha;
+    });
+
+    return formatHora(sesionesDeFecha.length ? sesionesDeFecha : horario);
+  };
 
   return (
     <div className="mt-5">
@@ -228,7 +239,7 @@ function ScheduleList({
             <span className="font-semibold text-[#124e78]">
               {formatFechaLarga(fecha)}
             </span>
-            <span>{hora}</span>
+            <span>{horaPorFecha(fecha)}</span>
           </li>
         ))}
       </ul>
@@ -387,9 +398,10 @@ function UnavailablePanel({
   course: CourseDetail;
   slug: string | null;
 }) {
-  const fechas = course.fechas ?? [];
+  const fechaHoy = course.fecha_hoy ?? new Date().toISOString().split("T")[0];
+  const fechas = (course.fechas ?? []).filter((fecha) => fecha >= fechaHoy);
   const primeraFecha = fechas[0] ?? null;
-  const proximaFecha = course.proxima_fecha ?? null;
+  const proximaFecha = course.proxima_fecha ?? primeraFecha;
   const estado = course.estado ?? "sin_fechas";
   const inicioPendiente = Boolean(
     course.fecha_hoy && primeraFecha && course.fecha_hoy < primeraFecha
