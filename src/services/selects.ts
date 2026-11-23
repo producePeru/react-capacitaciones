@@ -49,6 +49,13 @@ export const getSectors = () => getOptions("select/economic-sectors");
 /** Rubro (paso 2) */
 export const getRubros = () => getOptions("select/rubros");
 
+/** Actividades comerciales correspondientes al rubro elegido. */
+export const getActivitiesByRubro = (rubroId: number | string) =>
+  getOptions(`select/activity-by-rubro/${encodeURIComponent(rubroId)}`);
+
+/** Cargo del participante en la empresa. */
+export const getCompanyRoles = () => getOptions("select/role-company");
+
 /** Región (paso 2) */
 export const getRegions = () => getOptions("select/cities");
 
