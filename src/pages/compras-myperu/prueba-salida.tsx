@@ -48,6 +48,7 @@ type CourseDetail = {
   fecha_hoy?: string | null;
   proxima_fecha?: string | null;
   asistencias_habilitadas?: boolean;
+  switch_test?: number | null;
 };
 
 type EventInfoResponse = {
@@ -403,19 +404,19 @@ function UnavailablePanel({
   );
 
   let titulo = "Prueba de salida";
-  let detalle = "El formulario de asistencia solo está disponible en las fechas programadas del evento.";
+  let detalle = "La prueba de salida solo está disponible en las fechas programadas del evento.";
   let mensajeEnlace = "Si aún no estás inscrito, puedes registrarte aquí:";
 
   if (estado === "proximo") {
     titulo = inicioPendiente
       ? `Este test se habilita el ${formatFechaLarga(primeraFecha)}`
-      : `La asistencia se habilita el ${formatFechaLarga(proximaFecha)}`;
+      : `La prueba de salida se habilita el ${formatFechaLarga(proximaFecha)}`;
     detalle = inicioPendiente
       ? "El formulario de la Prueba de salida se habilitará ese día."
       : "El formulario solo está disponible en las fechas programadas del evento.";
   } else if (estado === "finalizado") {
     titulo = "Este evento ya finalizó";
-    detalle = "El formulario de asistencia ya no está disponible.";
+    detalle = "La prueba de salida ya no está disponible.";
     mensajeEnlace = "Puedes revisar las próximas capacitaciones aquí:";
   } else if (estado === "sin_fechas") {
     titulo = "Este evento aún no tiene fechas programadas";
@@ -560,6 +561,8 @@ export default function ComprasMyperuPruebaSalida() {
 
   const isLoadingCourse = Boolean(slug) && loadedCourse?.slug !== slug;
   const course = loadedCourse?.slug === slug ? loadedCourse.course : null;
+  const testEnabled = Number(course?.switch_test) === 1;
+  const testDateBlocked = course?.estado === "finalizado" || course?.estado === "sin_fechas";
 
   const documentRule = getDocumentRule(documentTypes, form.documentType);
 
@@ -605,6 +608,8 @@ export default function ComprasMyperuPruebaSalida() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!testEnabled || submitting) return;
+
     setShowErrors(true);
     setAccessError(null);
     setRedirecting(false);
@@ -628,6 +633,7 @@ export default function ComprasMyperuPruebaSalida() {
         tipo_documento_id: Number(form.documentType),
         numero_dni: form.documentNumber.trim(),
         ruc: form.ruc,
+        finalidad: "test_salida",
       },
     })
       .then((response) => {
@@ -659,10 +665,10 @@ export default function ComprasMyperuPruebaSalida() {
             return;
           }
 
-          if (data?.reason === "fecha_no_disponible") {
+          if (data?.reason === "fecha_no_disponible" || data?.reason === "test_desactivado") {
             setAccessError(
               data.message ??
-              "La asistencia solo está disponible en las fechas programadas del evento."
+              "La prueba de salida no está disponible."
             );
             setInfoRefreshKey((key) => key + 1);
             return;
@@ -694,18 +700,35 @@ export default function ComprasMyperuPruebaSalida() {
           <div className="h-[8px] w-full bg-[#2b8aa8]" />
 
           <div className="px-8 py-6 md:px-14 md:py-10">
-            {enrollment ? (
+            {!course ? (
+              <LoadErrorPanel hasSlug={Boolean(slug)} />
+            ) : !testEnabled && testDateBlocked ? (
+              <UnavailablePanel course={course} slug={slug} />
+            ) : !testEnabled ? (
+              <div role="status" className="rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 md:p-8">
+                <h3 className="text-[22px] font-bold text-[#124e78]">
+                  Prueba de salida desactivada
+                </h3>
+                <p className="mt-3 text-[14px] text-[#3e647d]">
+                  El registro de la prueba de salida está desactivado. Espera a que el asesor lo habilite para continuar.
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => setInfoRefreshKey((key) => key + 1)}
+                  className="mt-6 bg-[#2b8aa8] px-6 hover:bg-[#20708a]"
+                >
+                  Actualizar estado
+                </Button>
+              </div>
+            ) : enrollment ? (
               <PruebaSalidaComprasMyPeru
+                key={slug}
                 slug={slug}
                 numeroDni={form.documentNumber}
                 date={enrollment.fechas?.[0] ?? ""}
                 horarioInicio={""}
                 horarioFin={""}
               />
-            ) : !course ? (
-              <LoadErrorPanel hasSlug={Boolean(slug)} />
-            ) : course.estado && course.estado !== "disponible" ? (
-              <UnavailablePanel course={course} slug={slug} />
             ) : (
               <form
                 noValidate
@@ -824,7 +847,7 @@ export default function ComprasMyperuPruebaSalida() {
                 <div className="mt-8 flex justify-end">
                   <Button
                     type="submit"
-                    disabled={submitting || redirecting}
+                    disabled={submitting || redirecting || !testEnabled}
                     className="bg-[#2b8aa8] px-8 hover:bg-[#20708a] focus:ring-[#2b8aa8]/30"
                   >
                     {submitting ? "VALIDANDO..." : "Continuar"}

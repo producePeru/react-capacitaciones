@@ -19,6 +19,7 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('success');
+  const [testError, setTestError] = useState<string | null>(null);
 
   const entradaRefs = useRef({});
   const salidaRefs = useRef({});
@@ -37,6 +38,9 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
         setTestSalida(Array.isArray(data.test_salida) ? data.test_salida : []);
       } catch (e) {
         console.error(e);
+        if (mounted) {
+          setTestError(e?.response?.data?.message || "No se pudo cargar la prueba de salida. Vuelve a intentarlo más adelante.");
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -49,6 +53,8 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
   };
 
   const handleSubmit = async () => {
+    if (submitting || testError) return;
+
     const missing = [];
     testEntrada.forEach((_, i) => { if (!answers[`entrada-${i}`]) missing.push({ section: "entrada", idx: i }); });
     testSalida.forEach((_, i) => { if (!answers[`salida-${i}`]) missing.push({ section: "salida", idx: i }); });
@@ -79,7 +85,9 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
     } catch (e) {
       console.error(e);
       const status = e?.response?.status || e?.response?.data?.status;
-      if (status === 409) {
+      if (e?.response?.data?.reason === 'test_desactivado' || e?.response?.data?.reason === 'fecha_no_disponible') {
+        setTestError(e.response.data.message);
+      } else if (status === 409) {
         setModalType('already');
         setShowModal(true);
       } else {
@@ -94,6 +102,15 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
     return (
       <div className="mx-auto max-w-3xl bg-white p-6">
         <p className="text-[#3e647d]">Cargando prueba...</p>
+      </div>
+    );
+  }
+
+  if (testError) {
+    return (
+      <div role="alert" className="rounded-xl border border-[#f0c27b]/40 bg-[#fff8ec] p-6 text-[#3e647d]">
+        <h2 className="mb-3 text-[22px] font-bold text-[#124e78]">Prueba de salida no disponible</h2>
+        <p>{testError}</p>
       </div>
     );
   }
