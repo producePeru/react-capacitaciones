@@ -15,6 +15,7 @@ import { useFavicon } from "@/hooks/useFavicon";
 import { httpRequest } from "@/services/api";
 import { getCourseTimeRanges } from "@/utils/courseSchedule";
 import {
+  getActivitiesByRubro,
   getCountries,
   getDistricts,
   getDocumentTypes,
@@ -27,6 +28,7 @@ import {
 } from "@/services/selects";
 
 const steps = ["Datos de la Empresa", "Datos del Participante"];
+const RUBRO_ACTIVIDAD_SELECT = "3";
 
 // const WHATSAPP_COMMUNITY_URL =
 //   "https://chat.whatsapp.com/FcqgLQvvmP23HN1TYxQH5N";
@@ -394,7 +396,9 @@ function isEmpresaFormValid(values: EmpresaForm) {
     values.nombreComercial.trim().length > 0 &&
     values.sector !== "" &&
     values.rubro !== "" &&
-    values.actividad.trim().length > 0 &&
+    (values.rubro === RUBRO_ACTIVIDAD_SELECT
+      ? /^\d+$/.test(values.actividad)
+      : values.actividad.trim().length > 0) &&
     values.region !== "" &&
     values.province !== "" &&
     values.district !== "" &&
@@ -411,6 +415,7 @@ type EmpresaLookupResponse = {
     nombre_comercial?: string | null;
     sector_economico_id?: number | null;
     rubro_id?: number | null;
+    actividad_comercial_id?: number | null;
     actividad_comercial_nombre?: string | null;
     region_id?: number | null;
     provincia_id?: number | null;
@@ -499,7 +504,9 @@ function StepEmpresa({
         nombreComercial: data.nombre_comercial ?? "",
         sector: toOptionValue(data.sector_economico_id),
         rubro: toOptionValue(data.rubro_id),
-        actividad: data.actividad_comercial_nombre ?? "",
+        actividad: toOptionValue(data.rubro_id) === RUBRO_ACTIVIDAD_SELECT
+          ? toOptionValue(data.actividad_comercial_id)
+          : data.actividad_comercial_nombre ?? "",
         region: toOptionValue(data.region_id),
         province: toOptionValue(data.provincia_id),
         district: toOptionValue(data.distrito_id),
@@ -540,8 +547,10 @@ function StepEmpresa({
       ? "El nombre comercial es obligatorio."
       : null;
   const actividadError =
-    showErrors && actividad.trim() === ""
-      ? "La actividad comercial es obligatoria."
+    showErrors && (rubro === RUBRO_ACTIVIDAD_SELECT ? !/^\d+$/.test(actividad) : actividad.trim() === "")
+      ? rubro === RUBRO_ACTIVIDAD_SELECT
+        ? "Selecciona una actividad comercial."
+        : "La actividad comercial es obligatoria."
       : null;
   const direccionError =
     showErrors && direccion.trim() === ""
@@ -621,28 +630,42 @@ function StepEmpresa({
           placeholder="Seleccione el rubro"
           loader={getRubros}
           value={rubro}
-          onChange={(next) => update({ rubro: next })}
+          onChange={(next) => update({ rubro: next, actividad: "" })}
           error={rubroError}
         />
-        <div className="grid gap-2">
-          <Label htmlFor="actividad">Actividad Comercial</Label>
-          <BrandInput
+        {rubro === RUBRO_ACTIVIDAD_SELECT ? (
+          <OptionsSelectField
+            key={`actividad-${rubro}`}
             id="actividad"
-            placeholder="Ingrese la actividad comercial"
+            label="Actividad Comercial"
+            placeholder="Seleccione la actividad comercial"
+            loader={() => getActivitiesByRubro(RUBRO_ACTIVIDAD_SELECT)}
+            filter={(option) => ![22, 23, 24, 25, 26].includes(Number(option.value))}
             value={actividad}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              update({ actividad: event.target.value })
-            }
-            state={actividadError ? "error" : "default"}
-            aria-invalid={actividadError ? true : undefined}
-            aria-describedby={actividadError ? "actividad-error" : undefined}
+            onChange={(next) => update({ actividad: next })}
+            error={actividadError}
           />
-          {actividadError && (
-            <p id="actividad-error" className="text-xs text-input-error">
-              {actividadError}
-            </p>
-          )}
-        </div>
+        ) : (
+          <div className="grid gap-2">
+            <Label htmlFor="actividad">Actividad Comercial</Label>
+            <BrandInput
+              id="actividad"
+              placeholder="Ingrese la actividad comercial"
+              value={actividad}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                update({ actividad: event.target.value })
+              }
+              state={actividadError ? "error" : "default"}
+              aria-invalid={actividadError ? true : undefined}
+              aria-describedby={actividadError ? "actividad-error" : undefined}
+            />
+            {actividadError && (
+              <p id="actividad-error" className="text-xs text-input-error">
+                {actividadError}
+              </p>
+            )}
+          </div>
+        )}
         <OptionsSelectField
           id="region"
           label="Región"
@@ -1254,7 +1277,9 @@ function RegistrationStepper({
       discapacidad: Number(participanteValues.discapacidad),
       celular: participanteValues.celular,
       correo_electronico: participanteValues.correo,
-      actividad_comercial_nombre: empresa.actividad,
+      ...(empresa.rubro === RUBRO_ACTIVIDAD_SELECT
+        ? { actividad_comercial_id: toId(empresa.actividad) }
+        : { actividad_comercial_nombre: empresa.actividad }),
       fecha_nacimiento: participanteValues.fecha_nacimiento,
       fecha_seleccionada: selectedDate || null,
     };
