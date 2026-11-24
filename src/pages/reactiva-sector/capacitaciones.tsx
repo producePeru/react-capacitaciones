@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import ugsecoIcon from "@/assets/icons/compras-myperu.ico";
+import ugsecoIcon from "@/assets/icons/reactiva.ico";
 import { useFavicon } from "@/hooks/useFavicon";
 import { httpRequest } from "@/services/api";
 import empresarios from "@/assets/images/reactiva.png";
@@ -305,7 +305,7 @@ export default function CoursesTemplate() {
   useFavicon(ugsecoIcon);
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = "compras MYPErú";
+    document.title = "Reactivación Sector Textil confecciones";
     return () => {
       document.title = previousTitle;
     };
