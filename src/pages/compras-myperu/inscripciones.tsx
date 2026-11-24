@@ -13,6 +13,7 @@ import {
 } from "@/components/tailgrids/core/native-select";
 import { useFavicon } from "@/hooks/useFavicon";
 import { httpRequest } from "@/services/api";
+import { getCourseTimeRanges } from "@/utils/courseSchedule";
 import {
   getCountries,
   getDistricts,
@@ -1503,6 +1504,7 @@ type CourseDetail = {
   tema: string | null;
   fechas: string[] | null;
   horario: unknown;
+  horario_sesiones?: unknown;
   modalidad: string | null;
   asesor: string | null;
   link?: string | null;
@@ -1521,18 +1523,6 @@ function formatFechaLarga(fecha?: string | null) {
     month: "long",
     year: "numeric",
   });
-}
-
-function formatHora(horario: unknown) {
-  if (Array.isArray(horario)) {
-    return horario.filter(Boolean).join(" - ") || "Por confirmar";
-  }
-
-  if (typeof horario === "string" && horario.trim() !== "") {
-    return horario;
-  }
-
-  return "Por confirmar";
 }
 
 function formatModalidad(modalidad: string | null | undefined) {
@@ -1559,13 +1549,7 @@ function formatCalendarDate(date: Date) {
   return `${date.getFullYear()}${padCalendarValue(date.getMonth() + 1)}${padCalendarValue(date.getDate())}`;
 }
 
-function parseHorarioRango(horario: unknown) {
-  const text = Array.isArray(horario)
-    ? horario.filter(Boolean).join(" - ")
-    : typeof horario === "string"
-      ? horario
-      : "";
-
+function parseHorarioRango(text: string) {
   const matches = [
     ...text.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/gi),
   ]
@@ -1620,7 +1604,8 @@ function buildGoogleCalendarUrl(course: CourseDetail | null, selectedDate?: stri
     const [year, month, day] = fecha.split("-").map(Number);
 
     if (year && month && day) {
-      const rango = parseHorarioRango(course?.horario);
+      const horario = getCourseTimeRanges(course?.horario_sesiones ?? course?.horario, fecha)[0] ?? "";
+      const rango = parseHorarioRango(horario);
 
       if (rango) {
         const start = new Date(
@@ -1670,6 +1655,7 @@ function HeroBanner({
 }) {
   const fecha = selectedDate ?? course?.fechas?.[0] ?? null;
   const esVirtual = (course?.modalidad ?? "").trim().toUpperCase() === "VIRTUAL";
+  const horarios = getCourseTimeRanges(course?.horario_sesiones ?? course?.horario, fecha);
 
   return (
     <div className="grid bg-[#f7fdff] md:grid-cols-[1fr_380px]">
@@ -1706,13 +1692,15 @@ function HeroBanner({
             <span className="font-semibold text-[#124e78]">Fecha: </span>
             <span className="text-[#3e647d]">{formatFechaLarga(fecha)}</span>
           </p>
-          <p className="flex items-center gap-2">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <p className="flex items-start gap-2">
+            <svg className="mt-1 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
-            <span className="font-semibold text-[#124e78]">Hora: </span>
-            <span className="text-[#3e647d]">{formatHora(course?.horario)}</span>
+            <span className="shrink-0 font-semibold text-[#124e78]">Hora: </span>
+            <span className="min-w-0 text-[#3e647d]">
+              {horarios.length ? horarios.map((horario) => <span key={horario} className="block">{horario}</span>) : "Por confirmar"}
+            </span>
           </p>
           <p className="flex items-center gap-2">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2b8aa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1793,7 +1781,6 @@ export default function Inscripciones() {
 
   useEffect(() => {
     if (!slug) return;
-    if (loadedCourse?.slug === slug) return;
 
     let active = true;
 
@@ -1821,21 +1808,13 @@ export default function Inscripciones() {
   const today = new Date().toISOString().split("T")[0];
   const availableDates = (course?.fechas ?? []).filter((f) => f >= today);
 
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [showDateModal, setShowDateModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (availableDates.length > 1) {
-      setShowDateModal(true);
-      if (!selectedDate) setSelectedDate(availableDates[0]);
-    } else if (availableDates.length === 1) {
-      setSelectedDate(availableDates[0]);
-      setShowDateModal(false);
-    } else {
-      setSelectedDate("");
-      setShowDateModal(false);
-    }
-  }, [course?.fechas]);
+  const [dateChoice, setDateChoice] = useState<{ slug: string | null; date: string } | null>(null);
+  const [dismissedDateKey, setDismissedDateKey] = useState<string | null>(null);
+  const dateKey = JSON.stringify([slug, availableDates]);
+  const selectedDate = dateChoice?.slug === slug && availableDates.includes(dateChoice.date)
+    ? dateChoice.date
+    : availableDates[0] ?? "";
+  const showDateModal = availableDates.length > 1 && dismissedDateKey !== dateKey;
 
   if (isLoadingCourse) {
     return <PageLoading />;
@@ -1853,7 +1832,7 @@ export default function Inscripciones() {
                 <button
                   key={d}
                   type="button"
-                  onClick={() => setSelectedDate(d)}
+                  onClick={() => setDateChoice({ slug, date: d })}
                   className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${selectedDate === d ? "border-[#2b8aa8] bg-[#e6f4f9]" : "border-[#e0e0e0] hover:border-[#2b8aa8]/50"}`}
                 >
                   <span className="font-semibold">
@@ -1863,8 +1842,8 @@ export default function Inscripciones() {
               ))}
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setShowDateModal(false)} className="rounded-md px-4 py-2 text-sm font-semibold text-[#124e78] hover:bg-gray-100">Cancelar</button>
-              <button type="button" onClick={() => setShowDateModal(false)} className="rounded-md bg-[#2b8aa8] px-4 py-2 text-sm font-bold text-white hover:bg-[#20708a]">Continuar</button>
+              <button type="button" onClick={() => setDismissedDateKey(dateKey)} className="rounded-md px-4 py-2 text-sm font-semibold text-[#124e78] hover:bg-gray-100">Cancelar</button>
+              <button type="button" onClick={() => setDismissedDateKey(dateKey)} className="rounded-md bg-[#2b8aa8] px-4 py-2 text-sm font-bold text-white hover:bg-[#20708a]">Continuar</button>
             </div>
           </div>
         </div>

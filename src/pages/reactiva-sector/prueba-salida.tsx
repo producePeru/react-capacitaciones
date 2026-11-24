@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import comprasIcon from "@/assets/icons/compras-myperu.ico";
+import comprasIcon from "@/assets/icons/reactiva.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
 import PruebaSalidaComprasMyPeru from "@/components/test/PruebaSalidaComprasMyPeru";
 import { Button } from "@/components/tailgrids/core/button";
@@ -491,7 +491,7 @@ export default function ComprasMyperuPruebaSalida() {
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = "compras MYPErú | Prueba salida";
+    document.title = "Reactiva | Prueba salida";
     return () => {
       document.title = previousTitle;
     };
