@@ -637,7 +637,7 @@ function StepEmpresa({
           <OptionsSelectField
             key={`actividad-${rubro}`}
             id="actividad"
-            label="Actividad Comercial"
+            label="Actividad Económica"
             placeholder="Seleccione la actividad comercial"
             loader={() => getActivitiesByRubro(RUBRO_ACTIVIDAD_SELECT)}
             filter={(option) => ![22, 23, 24, 25, 26].includes(Number(option.value))}
@@ -647,7 +647,7 @@ function StepEmpresa({
           />
         ) : (
           <div className="grid gap-2">
-            <Label htmlFor="actividad">Actividad Comercial</Label>
+            <Label htmlFor="actividad">Actividad Económica</Label>
             <BrandInput
               id="actividad"
               placeholder="Ingrese la actividad comercial"

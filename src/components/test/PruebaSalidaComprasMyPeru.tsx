@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useEffect, useRef, useState } from "react";
 import { httpRequest } from "@/services/api";
+import { getFrontendUrl } from "@/utils/frontendUrl";
 
 type PruebaSalidaComprasMyPeruProps = {
   slug?: string | null;
@@ -9,9 +10,10 @@ type PruebaSalidaComprasMyPeruProps = {
   date?: string;
   horarioInicio?: string;
   horarioFin?: string;
+  redirectPath?: string;
 };
 
-export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioId }: PruebaSalidaComprasMyPeruProps) {
+export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioId, redirectPath = "/compras-myperu" }: PruebaSalidaComprasMyPeruProps) {
   const [loading, setLoading] = useState(true);
   const [testEntrada, setTestEntrada] = useState([]);
   const [testSalida, setTestSalida] = useState([]);
@@ -120,20 +122,20 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
       <div className="mx-auto max-w-3xl bg-white">
         <h2 className="text-[22px] font-bold text-[#124e78] mb-6">Prueba de salida</h2>
         <div className="space-y-6">
-        {testEntrada.length ? testEntrada.map((q, i) => (
-          <div key={q.id ?? i} ref={el => { entradaRefs.current[i] = el; }}>
-            <Question number={i + 1} text={q.texto ?? q.pregunta} options={q.opciones ?? []} value={answers[`entrada-${i}`]} onChange={v => handleAnswer("entrada", i, v)} />
-          </div>
-        )) : <div className="rounded-xl border border-[#cfe0ec] p-6 text-[#3e647d]">No hay preguntas de entrada.</div>}
+          {testEntrada.length ? testEntrada.map((q, i) => (
+            <div key={q.id ?? i} ref={el => { entradaRefs.current[i] = el; }}>
+              <Question number={i + 1} text={q.texto ?? q.pregunta} options={q.opciones ?? []} value={answers[`entrada-${i}`]} onChange={v => handleAnswer("entrada", i, v)} />
+            </div>
+          )) : <div className="rounded-xl border border-[#cfe0ec] p-6 text-[#3e647d]">No hay preguntas de entrada.</div>}
         </div>
 
         <h2 className="text-[22px] font-bold text-[#124e78] mt-10 mb-6">Encuesta de satisfacción</h2>
         <div className="space-y-6">
-        {testSalida.length ? testSalida.map((q, i) => (
-          <div key={q.id ?? i} ref={el => { salidaRefs.current[i] = el; }}>
-            <RatingQuestion number={i + 1} text={q.texto ?? q.pregunta} options={q.opciones ?? []} value={answers[`salida-${i}`]} onChange={v => handleAnswer("salida", i, v)} />
-          </div>
-        )) : <div className="rounded-xl border border-[#cfe0ec] p-6 text-[#3e647d]">No hay preguntas de satisfacción.</div>}
+          {testSalida.length ? testSalida.map((q, i) => (
+            <div key={q.id ?? i} ref={el => { salidaRefs.current[i] = el; }}>
+              <RatingQuestion number={i + 1} text={q.texto ?? q.pregunta} options={q.opciones ?? []} value={answers[`salida-${i}`]} onChange={v => handleAnswer("salida", i, v)} />
+            </div>
+          )) : <div className="rounded-xl border border-[#cfe0ec] p-6 text-[#3e647d]">No hay preguntas de satisfacción.</div>}
         </div>
 
         <div className="mt-8 flex justify-end">
@@ -157,9 +159,7 @@ export default function PruebaSalidaComprasMyPeru({ slug, numeroDni, empresarioI
             </p>
             <button
               onClick={() => {
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const base = isLocal ? 'http://localhost:5174' : import.meta.env.VITE_APP_FRONTEND_URL || window.location.origin;
-                window.location.href = `${base}/compras-myperu`;
+                window.location.href = getFrontendUrl(redirectPath);
               }}
               className="mt-6 rounded-md bg-[#2b8aa8] px-6 py-3 text-[14px] font-bold text-white hover:bg-[#20708a]"
             >

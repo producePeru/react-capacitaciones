@@ -723,6 +723,7 @@ export default function ComprasMyperuPruebaSalida() {
             ) : enrollment ? (
               <PruebaSalidaComprasMyPeru
                 key={slug}
+                redirectPath="/compras-myperu"
                 slug={slug}
                 numeroDni={form.documentNumber}
                 date={enrollment.fechas?.[0] ?? ""}
