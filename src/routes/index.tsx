@@ -9,6 +9,7 @@ const Diagnostico = lazy(() => import("@/pages/ugseco/diagnóstico"));
 const Inscripciones = lazy(() => import("@/pages/ugseco/inscripciones"));
 const InscripcionesSinCooperativa = lazy(() => import("@/pages/ugseco/inscripciones-sin-cooperativa"));
 const AsistenciaPresencialUgseco = lazy(() => import("@/pages/ugseco/asistencia-presencial"));
+const ListaUgseco = lazy(() => import("@/pages/inscritos/lista-ugseco"));
 const TuEmpresa = lazy(() => import("@/pages/mypes/tu-empresa"));
 const ActualizarDatosFeriantes = lazy(() => import("@/pages/ferias/actualizar-datos-feriantes"));
 
@@ -60,6 +61,10 @@ export const routes: RouteObject[] = [
   {
     path: "/ugseco/asistencia-presencial",
     element: <AsistenciaPresencialUgseco />,
+  },
+  {
+    path: "/inscritos/lista-ugseco",
+    element: <ListaUgseco />,
   },
 
   //===================================> compras MYPEru
