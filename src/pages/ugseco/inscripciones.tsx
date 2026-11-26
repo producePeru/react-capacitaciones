@@ -1,7 +1,7 @@
 
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import ugsecoIcon from "@/assets/icons/ugseco.ico";
 import cooperativaMype from "@/assets/images/cooperativa-mype.png";
 import EventoCaducado from "@/components/alerts/EventoCaducado";
@@ -1536,6 +1536,7 @@ function RegistrationStepper({
 
 type CourseDetail = {
   slug: string;
+  switch_institucion?: number | string | null;
   tema: string | null;
   fechas: string[] | null;
   horario: unknown;
@@ -1866,6 +1867,10 @@ export default function Inscripciones() {
 
   if (isLoadingCourse) {
     return <PageLoading />;
+  }
+
+  if (slug && Number(course?.switch_institucion) === 1) {
+    return <Navigate to={`/registro-instituciones?slug=${encodeURIComponent(slug)}`} replace />;
   }
 
   if (isEventoCaducado) {
