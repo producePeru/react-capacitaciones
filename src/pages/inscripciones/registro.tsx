@@ -22,6 +22,7 @@ import {
   getRegions,
   getRubros,
   getSectors,
+  getCompanyRoles,
   type SelectOption,
 } from "@/services/selects";
 
@@ -373,6 +374,8 @@ type EmpresaForm = {
   province: string;
   district: string;
   direccion: string;
+  coopNombreInstitucion: string;
+  cargoEmpresaId: string;
 };
 
 const emptyEmpresaForm: EmpresaForm = {
@@ -386,9 +389,15 @@ const emptyEmpresaForm: EmpresaForm = {
   province: "",
   district: "",
   direccion: "",
+  coopNombreInstitucion: "",
+  cargoEmpresaId: "",
 };
 
-function isEmpresaFormValid(values: EmpresaForm) {
+function isInstitucionHabilitada(course: CourseDetail | null | undefined) {
+  return Number(course?.switch_institucion ?? 0) === 1;
+}
+
+function isEmpresaFormValid(values: EmpresaForm, institucionHabilitada = false) {
   return (
     values.nombreComercial.trim().length > 0 &&
     values.sector !== "" &&
@@ -397,7 +406,10 @@ function isEmpresaFormValid(values: EmpresaForm) {
     values.region !== "" &&
     values.province !== "" &&
     values.district !== "" &&
-    values.direccion.trim().length > 0
+    values.direccion.trim().length > 0 &&
+    (!institucionHabilitada ||
+      (values.coopNombreInstitucion.trim().length > 0 &&
+        values.cargoEmpresaId !== ""))
   );
 }
 
@@ -443,11 +455,13 @@ function StepEmpresa({
   onChange,
   showErrors,
   onComplete,
+  course,
 }: {
   values: EmpresaForm;
   onChange: (values: EmpresaForm) => void;
   showErrors: boolean;
   onComplete?: () => void;
+  course?: CourseDetail | null;
 }) {
   const {
     ruc,
@@ -460,9 +474,13 @@ function StepEmpresa({
     province,
     district,
     direccion,
+    coopNombreInstitucion,
+    cargoEmpresaId,
   } = values;
   const update = (patch: Partial<EmpresaForm>) =>
     onChange({ ...values, ...patch });
+
+  const institucionHabilitada = isInstitucionHabilitada(course);
 
   const [loadingRuc, setLoadingRuc] = useState(false);
   const valuesRef = useRef(values);
@@ -507,7 +525,7 @@ function StepEmpresa({
 
       onChange(nextValues);
 
-      if (onComplete && isEmpresaFormValid(nextValues)) {
+      if (onComplete && isEmpresaFormValid(nextValues, institucionHabilitada)) {
         onComplete();
       }
     } catch {
@@ -559,6 +577,14 @@ function StepEmpresa({
   const districtError =
     showErrors && province !== "" && district === ""
       ? "El distrito es obligatorio."
+      : null;
+  const coopNombreInstitucionError =
+    institucionHabilitada && showErrors && coopNombreInstitucion.trim() === ""
+      ? "El nombre de la cooperativa/institución es obligatorio."
+      : null;
+  const cargoEmpresaError =
+    institucionHabilitada && showErrors && cargoEmpresaId === ""
+      ? "El cargo es obligatorio."
       : null;
 
   return (
@@ -696,6 +722,47 @@ function StepEmpresa({
             </p>
           )}
         </div>
+        {institucionHabilitada && (
+          <>
+            <div className="grid gap-2">
+              <Label htmlFor="coop-nombre-institucion">
+                Nombre de la Cooperativa/Institución
+              </Label>
+              <BrandInput
+                id="coop-nombre-institucion"
+                placeholder="Ingrese el nombre de la cooperativa/institución"
+                value={coopNombreInstitucion}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  update({ coopNombreInstitucion: event.target.value })
+                }
+                state={coopNombreInstitucionError ? "error" : "default"}
+                aria-invalid={coopNombreInstitucionError ? true : undefined}
+                aria-describedby={
+                  coopNombreInstitucionError
+                    ? "coop-nombre-institucion-error"
+                    : undefined
+                }
+              />
+              {coopNombreInstitucionError && (
+                <p
+                  id="coop-nombre-institucion-error"
+                  className="text-xs text-input-error"
+                >
+                  {coopNombreInstitucionError}
+                </p>
+              )}
+            </div>
+            <OptionsSelectField
+              id="cargo-empresa"
+              label="Cargo"
+              placeholder="Seleccione el cargo"
+              loader={getCompanyRoles}
+              value={cargoEmpresaId}
+              onChange={(next) => update({ cargoEmpresaId: next })}
+              error={cargoEmpresaError}
+            />
+          </>
+        )}
       </div>
     </div>
   );
@@ -1200,9 +1267,10 @@ function RegistrationStepper({
 
   const last = current === steps.length - 1;
   const calendarUrl = buildGoogleCalendarUrl(course, selectedDate);
+  const institucionHabilitada = isInstitucionHabilitada(course);
 
   const handleNext = () => {
-    if (current === 0 && !isEmpresaFormValid(empresa)) {
+    if (current === 0 && !isEmpresaFormValid(empresa, institucionHabilitada)) {
       setShowEmpresaErrors(true);
       return;
     }
@@ -1259,6 +1327,12 @@ function RegistrationStepper({
       actividad_comercial_nombre: empresa.actividad,
       fecha_nacimiento: participanteValues.fecha_nacimiento,
       fecha_seleccionada: selectedDate || null,
+      ...(institucionHabilitada
+        ? {
+            coop_nombre_institucion: empresa.coopNombreInstitucion.trim(),
+            cargo_empresa_id: toId(empresa.cargoEmpresaId),
+          }
+        : {}),
     };
 
     setSubmitting(true);
@@ -1315,6 +1389,7 @@ function RegistrationStepper({
           onChange={setEmpresa}
           showErrors={showEmpresaErrors}
           onComplete={() => setCurrent(1)}
+          course={course}
         />
       )}
       {current === 1 && (
@@ -1501,6 +1576,7 @@ type CourseDetail = {
   formulario_disponible?: boolean;
   link?: string | null;
   direccion?: string | null;
+  switch_institucion?: number | string | null;
 };
 
 function formatFechaLarga(fecha?: string | null) {
